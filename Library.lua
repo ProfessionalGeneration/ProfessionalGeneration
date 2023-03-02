@@ -27,7 +27,7 @@ local Draw do
             end
         end
     }
-    local ctypes = {
+    local ctypes = { -- i love how i used this in exactly NONE of the ui lib at all
         ["clicked"] = function(frame) -- will return click pos
             local event = Instance.new("BindableEvent")
 
