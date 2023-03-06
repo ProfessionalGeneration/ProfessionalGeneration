@@ -1,3 +1,10 @@
+--[==[
+    I did most of the math (me sawd yes me)
+
+    thank topit for the colorpicker gradient images
+    THANK FRICK FOR THE ANGLER MATH THAT ONE RLY SUCKED FIXING (he pro)
+]==]
+
 local cams = workspace.CurrentCamera.ViewportSize
 local gradient = syn.request({Url = "https://media.discordapp.net/attachments/907173542972502072/1076735971749535845/angryimg.png"}).Body
 local colorpgradient = syn.request({Url = "https://media.discordapp.net/attachments/907173542972502072/1079247178410774630/overlay3.png"}).Body
@@ -435,7 +442,7 @@ function lib:loader(name)
         v.Visible = true
     end
 
-    con = sv.RunService.RenderStepped:Connect(function()
+    con = sv.RunService.Heartbeat:Connect(function()
         i += 1
 
         for _, v in d do
@@ -614,7 +621,7 @@ function lib:note(msg, settings) -- -> any if settings.type is question (returns
             task.wait()
         end
 
-        tcon = sv.RunService.RenderStepped:Connect(function()
+        tcon = sv.RunService.Heartbeat:Connect(function()
             timer.Size = Vector2.new(math.clamp((tick() - t) / settings.Time * sizex, 1, sizex), timer.Size.Y)
             timer.Opacity = math.acos(math.cos(ia * math.pi) / math.pi) - .8
             ia += .005
@@ -760,7 +767,7 @@ function lib:bindlist()
 
         function bind:remove()
             table.remove(bts, table.find(bts, bt))
-            bt:Destroy()
+            bt.obj:Destroy()
             for i,v in bts do
                 v.Position -= Vector2.new(0, 20)
             end
@@ -778,7 +785,172 @@ function lib:bindlist()
     return binds
 end
 
-function lib:new(libname)
+function lib:togglelist()
+    local togs = {}
+    local objs = {}
+
+    local function l()
+        local i = 0
+        for _,v in objs do i+=1 end
+        return i
+    end
+
+    function togs:add(name)
+        local tt = Draw "Text"
+
+        objs[name] = tt
+        tt.Visible = true
+        tt.Size = 24
+        tt.Outline = true
+        tt.Font = Drawing.Fonts.Monospace
+        tt.Color = Color3.fromHSV(math.acos(math.cos((l() / 20) * math.pi)) / math.pi, 1, 1)
+        tt.Position = cams - Vector2.new(GetTextSize(name, 24, Drawing.Fonts.Monospace).X, 24 + ((l() - 1) * 26))
+        tt.Text = name
+    end
+
+    function togs:remove(name)
+        objs[name].obj:Destroy()
+
+        for i,v in objs do
+            v.Position += Vector2.new(0, 26)
+        end
+    end
+
+    return togs
+end
+
+--[[function lib:commandbar() -- i dont wanna fuckin make this rn
+    local cbar = {
+        FocusKey = Enum.KeyCode.Semicolon,
+        cmds = {
+            {
+                name = "print",
+                aliases = "p",
+                func = function(...)
+                    print(...)
+                end
+            }
+        }
+    }
+    -- sdata here cuz ik people only gonna use the ui lib
+    local sdata = syn.request({Url = "https://cdn.discordapp.com/attachments/907173542972502072/1081870705471262760/334-3349023_free-white-settings-icon-png-tool-icon-white.png"}).Body
+
+    local box = GetGradientBox(true)
+    local listbb = GetGradientBox(true)
+    local listb = Draw "Image"
+    local tb = GetGradientBox(true)
+    local tbtext = Draw "Text"
+    local cb = Instance.new("TextBox", sv.CoreGui) -- uea i dont feel like making my own fucking keyboard handler
+    box.Size = Vector2.new(241, 25)
+    box.Position = Vector2.new(30, cams.Y - 60)
+    box.draggable = true
+
+    listbb.Position = box.Position + Vector2.new(222, 6)
+    listbb.Size = Vector2.new(14, 14)
+    listbb.ZIndex = 1
+    listbb.parent = box
+    listbb.Color = Color3.new(.1, .1, .1)
+
+    listb.Visible = true
+    listb.ZIndex = 2
+    listb.Position = listbb.Position
+    listb.Size = Vector2.new(14, 14)
+    listb.parent = listbb
+    listb.name = "list button"
+    listb.obj.Data = sdata
+
+    tb.Position = box.Position + Vector2.new(5, 6)
+    tb.Size = Vector2.new(box.Size.X - 31, 14)
+    tb.Color = Color3.new(.1, .1, .1)
+    tb.ZIndex = 1
+    tb.parent = box
+    tb.name = "tb"
+
+    tbtext.ZIndex = 1
+    tbtext.Visible = true
+    tbtext.Outline = true
+    tbtext.Color = Color3.new(.7, .7, .7)
+    tbtext.Size = 16
+    tbtext.Font = Drawing.Fonts.Monospace
+    tbtext.Text = ("%s to focus"):format(shortendbinds[tostring(cbar.FocusKey):sub(14)] or tostring(cbar.FocusKey):sub(14))
+    tbtext.Position = tb.Position + Vector2.new(2, -2)
+    tbtext.parent = tb
+
+    Box(box, 0, true)
+    Box(tb, 1)
+    Box(listb, 1)
+
+    table.insert(cons, cb.Focused:Connect(function()
+        tbtext.Text = ""
+        tbtext.Color = lib.AccentColor
+        local tcon = cb.Changed:Connect(function()
+            tbtext.Text = cb.Text
+        end)
+
+        table.insert(cons, tcon)
+        cb.FocusLost:Wait()
+        tcon:Disconnect()
+        tbtext.Text = ("%s to focus"):format(shortendbinds[tostring(cbar.FocusKey):sub(14)] or tostring(cbar.FocusKey):sub(14))
+        tbtext.Color = Color3.new(.7, .7, .7)
+    end))
+
+    table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
+        if b then return end
+
+        if a.KeyCode == cbar.FocusKey then
+            task.defer(cb.CaptureFocus, cb)
+
+            return
+        end
+
+        if a.UserInputType == Enum.UserInputType.MouseButton1 then
+            if IsInFrame(tb, GetMousePosition()) then
+                cb:CaptureFocus()
+
+                return
+            end
+
+            if IsInFrame(listbb, GetMousePosition()) then
+                local list = GetGradientBox(true)
+                local title = Draw "Text"
+
+                list.Size = Vector2.new(241, 400)
+                list.Position = box.Position - Vector2.new(0, 410)
+                list.ZIndex = 4
+                list.draggable = true
+
+                title.ZIndex = 1
+                title.Visible = true
+                title.Outline = true
+                title.Color = Color3.new(1,1,1)
+                title.Size = 18
+                title.Font = Drawing.Fonts.Monospace
+                title.Text = "Settings  |  Commands"
+                title.Position = list.Position + Vector2.new(20, 1)
+                title.parent = tb
+                title.ZIndex = 5
+
+                for i,v in cbar.cmds do
+                    
+                end
+
+                Box(list, 4, true)
+            end
+        end
+    end))
+
+    function cbar:remove()
+        for i,v in box:children(true) do
+            v.obj:Destroy()
+        end
+
+        cb:Destroy()
+    end
+
+    return cbar
+end]]
+
+function lib:new(libname, logodata)
     local oldop = {}
     local library = {
         tabs = {
@@ -797,17 +969,29 @@ function lib:new(libname)
 
     local topbox = GetGradientBox(true)
     local label = Draw "Text"
+    local logo = logodata and Draw "Image"
 
     topbox.Position = startpos
     topbox.Size = Vector2.new(700, 421)
     topbox.draggable = true
+
+    if logodata then
+        logo.Position = topbox.Position + Vector2.new(5, 2)
+        logo.Size = Vector2.new(18, 18)
+        logo.Visible = true
+        logo.parent = topbox
+        logo.name = "logo"
+        logo.obj.Data = logodata -- fuck you luau why do i always have to do obj.Data
+        logo.ZIndex = 50
+        logo.Opacity = 1
+    end
 
     label.Visible = true
     label.Size = 18
     label.Outline = true
     label.Font = Drawing.Fonts.Monospace
     label.Color = Color3.new(1, 1, 1)
-    label.Position = topbox.Position + Vector2.new(10, 2)
+    label.Position = topbox.Position + Vector2.new(3 + (logo and 27 or 0), 2)
     label.Text = libname
     label.parent = topbox
     label.name = "label"
@@ -853,13 +1037,17 @@ function lib:new(libname)
                     end
                 end
 
-                for inc = vis and 0 or 1, vis and 1 or 0, vis and .05 or -.05 do
-                    for __,v in change do
-                        v.Opacity = inc
-                    end
+                local start = vis and 0 or 1
+                local down = vis
+                local hb = sv.RunService.Heartbeat
 
-                    task.wait()
-                end
+                repeat
+                    start = down and start + (hb:Wait() * 8) or start - (hb:Wait() * 8)
+
+                    for __,v in change do
+                        v.Opacity = start
+                    end
+                until start < 0 or start > 1
 
                 for __,v in change do
                     v.Opacity = vis and 1 or 0
@@ -982,7 +1170,7 @@ function lib:new(libname)
                 tl.Outline = true
                 tl.Font = Drawing.Fonts.Monospace
                 tl.Color = Color3.new(1, 1, 1)
-                tl.Position = tbox.Position + Vector2.new(2, 2)
+                tl.Position = tbox.Position + Vector2.new(2)
                 tl.Text = sname
                 tl.parent = tbox
                 tl.name = "label"
@@ -1016,7 +1204,7 @@ function lib:new(libname)
 
                             otab.Opacity = 1
                             for _, v in otab:children(true) do
-                                v.Opacity = ops[v] or 1
+                                v.Opacity = ops[v] or v.op or 1
                             end
                         end
                     end
@@ -1117,6 +1305,7 @@ function lib:new(libname)
                 tb.parent = bbox
                 tb.name = "tb"
                 tb.Opacity = i == 1 and default and 1 or 0
+                tb.op = default and 1 or 0
 
                 table.foreach(Box(tb, 3), function(_,v)
                     v.Visible = buttons < 13
@@ -1409,14 +1598,15 @@ function lib:new(libname)
                 end)
 
                 do
-                    local ci = 0
+                    local inc = 0
 
-                    table.insert(cons, sv.RunService.Stepped:Connect(function()
-                        local color = Color3.fromHSV(math.acos(math.cos(ci * math.pi)) / math.pi, 1, 1)
+                    table.insert(cons, sv.RunService.Heartbeat:Connect(function(a)
+                        inc += a / 2
+
+                        local color = Color3.fromHSV(math.acos(math.cos(inc * math.pi)) / math.pi, 1, 1)
                         if rb then
                             rb.Color = color
                         end
-                        ci += .005
 
                         if rainbow then
                             tb.Color = color
@@ -1434,7 +1624,7 @@ function lib:new(libname)
                         table.foreach(colorbox:children(true), function(_, v)
                             v.obj:Remove()
                         end)
-                        
+
                         colorbox = nil
                         rb = nil
                         ccon:Disconnect()
@@ -1765,7 +1955,7 @@ function lib:new(libname)
                 buttons += 1
             end
 
-            --[[function side:angler(bname, default, callback) -- THANK U FRICK FOR HELPING I NO CLUE HOW TRIG WORKS
+            function side:angler(bname, default, callback) -- THANK U FRICK FOR LITERALLY ALL OF THE MATH IN THIS (MY DUMBASS AINT KNOW TRIG)
                 local bbox = GetGradientBox(buttons < 13)
                 local tb = GetGradientBox(buttons < 13)
                 local text = Draw "Text"
@@ -2019,14 +2209,14 @@ function lib:new(libname)
                                     if mag then
                                         con = sv.RunService.Heartbeat:Connect(function()
                                             local pos = GetMousePosition()
-                                            local ang = math.asin(math.sin(circle.Position:Dot(pos)))
-                                            vpos.Position = circle.Position + Vector2.new(math.sin(ang) * 73, math.cos(ang) * 73)
-
+                                            local dir = (pos - circle.Position).Unit
+                                            local ang = math.atan2(dir.Y, dir.X) % (math.pi * 2)
+                                            vpos.Position = circle.Position + Vector2.new(math.cos(ang) * 73, math.sin(ang) * 73)
                                             ang *= (isn and -1 or 1)
-                                            amount.Text = tostring(ang).."°"
+                                            amount.Text = tostring(math.round(math.deg(ang))).."°"
                                             default = ang
                                             pcall(callback, ang)
-                                            Update(tostring(ang).."°")
+                                            Update(tostring(math.round(math.deg(ang))).."°")
                                         end)
 
                                         table.insert(cons, con)
@@ -2053,7 +2243,7 @@ function lib:new(libname)
 
                 Update(tostring(default).."°")
                 buttons += 1
-            end]]
+            end
 
             return side
         end
@@ -2077,7 +2267,6 @@ end
 return lib
 
 --[==[
-    local lib = loadstring(syn.request({Url = "https://raw.githubusercontent.com/GFXTI/ProfessionalGeneration/main/Library.lua"}).Body)()
 
     local binds = lib:bindlist()
     local bind = binds:add("Bind down", Enum.KeyCode.X, true, print)
@@ -2095,13 +2284,14 @@ return lib
         Time = 9
     })
     lib:note("ERROR! BALCK PEROSN", {
-        Error = true
+        Error = true,
+        Time = 5
     })
     lib:note("Professiona Generation", {
         Time = 2
     })
 
-    local j = lib:new("Professional Generation") -- make library -> table
+    local j = lib:new("Professional Generation", syn.request({Url = "https://cdn.discordapp.com/attachments/907173542972502072/1081826251758653540/1f602.png"}).Body) -- make library -> table (2nd arg is optional for a logo)
     local b = j:tab"Main tab" -- new tab with name -> table
     local t = b:side "side tab" -- new side tab with name -> table
     t:button("button", function() -- name, callback
@@ -2116,15 +2306,11 @@ return lib
         j:accent(color)
     end)
     t:textbox("textbox", "text", print) -- name, background text, callback -> string
-    -- DISABLED t:angler("angler", 90, print) -- name, default angle, callback -> number (You need to manually convert it to an angle through math.rad)
+    t:angler("angler", 90, print) -- name, default angle, callback -> number (You need to manually convert it to an angle through math.rad)
     b:side "stab2":button("ninjas", print)
     j:tab"MONEY HACK"
 
-    task.wait(5)
-    loader:finish()
-    bind:remove()
-    task.wait(5)
-
+    task.wait(10)
     table.foreach(cons, function(_, v) -- Disconnecting all of these kills the library
         v:Disconnect()
     end)
