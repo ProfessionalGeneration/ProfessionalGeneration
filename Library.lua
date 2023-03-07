@@ -1,5 +1,5 @@
 --[==[
-    I did most of the math (me sawd yes me)
+    I did most of the library (me sawd yes me)
 
     thank topit for the colorpicker gradient images
     THANK FRICK FOR THE ANGLER MATH THAT ONE RLY SUCKED FIXING (he pro)
