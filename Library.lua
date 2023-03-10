@@ -396,7 +396,8 @@ function lib:Chatlogs() -- someone test if this wok plsss
     Box(ibox, 21, true)
     Box(box, 20, true)
     Scrolling(ibox, {
-        
+        scrollamount = 16,
+        paddingbottom = -2
     })
 
     return function()
