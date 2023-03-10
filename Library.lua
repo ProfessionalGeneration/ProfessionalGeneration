@@ -4,7 +4,7 @@
     thank topit for the colorpicker gradient images
     THANK FRICK FOR THE ANGLER MATH THAT ONE RLY SUCKED FIXING (he pro)
 ]==]
-
+-- i should move these gradients probably to github
 local cams = workspace.CurrentCamera.ViewportSize
 local gradient = syn.request({Url = "https://media.discordapp.net/attachments/907173542972502072/1076735971749535845/angryimg.png"}).Body
 local colorpgradient = syn.request({Url = "https://media.discordapp.net/attachments/907173542972502072/1079247178410774630/overlay3.png"}).Body
@@ -363,6 +363,49 @@ end
 
 local function rgb255(rgb)
     return rgb.R * 255, rgb.G * 255, rgb.B * 255
+end
+
+function lib:Chatlogs() -- someone test if this wok plsss
+    local box = GetGradientBox(true)
+    local ibox = GetGradientBox(true)
+    local text = Draw "Text"
+    
+    box.Size = Vector2.new(400, 300)
+    box.Position = Vector2.new(500, 500)
+    box.Visible = true
+    box.ZIndex = 20
+    box.draggable = true
+
+    text.Position = box.Position + Vector2.new(2)
+    text.Size = 18
+    text.parent = box
+    text.name = "title"
+    text.Text = "Chat logs"
+    text.Font = Drawing.Fonts.Monospace
+    text.Visible = true
+    text.ZINdex = 21
+    text.Color = Color3.new(1,1,1)
+    text.Outline = true
+
+    ibox.Position = box.Position + Vector2.new(10, 20)
+    ibox.Size = Vector2.new(380, 270)
+    ibox.Visible = true
+    ibox.ZIndex = 21
+    ibox.parent = box
+
+    Box(ibox, 21, true)
+    Box(box, 20, true)
+    Scrolling(ibox, {
+        
+    })
+
+    return function()
+        box.obj:Destroy()
+
+        for i,v in box:chldren(true) do
+            v.obj:Desroy()
+        end
+    end
 end
 
 function lib:loader(name)
