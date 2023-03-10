@@ -388,17 +388,22 @@ function lib:Chatlogs() -- someone test if this wok plsss
     text.Outline = true
 
     ibox.Position = box.Position + Vector2.new(10, 20)
-    ibox.Size = Vector2.new(380, 270)
+    ibox.Size = Vector2.new(380, 264)
     ibox.Visible = true
     ibox.ZIndex = 21
     ibox.parent = box
 
     Box(ibox, 21, true)
     Box(box, 20, true)
-    Scrolling(ibox, {
+    local update = Scrolling(ibox, {
         scrollamount = 16,
         paddingbottom = -2
     })
+
+    local function Add(plr, msg) -- oh fuck i got no clue
+        local txt = Draw "Text"
+        --txt.Position = 
+    end
 
     return function()
         box.obj:Destroy()
