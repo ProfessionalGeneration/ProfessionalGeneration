@@ -1,10 +1,10 @@
 --[==[
-    I did most of the library (me sawd yes me)
+    I did most of the math (me sawd yes me)
 
     thank topit for the colorpicker gradient images
     THANK FRICK FOR THE ANGLER MATH THAT ONE RLY SUCKED FIXING (he pro)
 ]==]
--- i should move these gradients probably to github
+
 local cams = workspace.CurrentCamera.ViewportSize
 local gradient = syn.request({Url = "https://media.discordapp.net/attachments/907173542972502072/1076735971749535845/angryimg.png"}).Body
 local colorpgradient = syn.request({Url = "https://media.discordapp.net/attachments/907173542972502072/1079247178410774630/overlay3.png"}).Body
@@ -20,6 +20,7 @@ local shortendbinds = {["MouseButton1"] = "MB1", ["MouseButton2"] = "MB2", ["Mou
 local sv = setmetatable({}, {__index = function(_, a)
     return game:GetService(a)
 end})
+local isv2 = select(2, identifyexecutor()):find "v2"
 local Draw do
     local drag = {}
     local funcs = {
@@ -33,6 +34,15 @@ local Draw do
 
                 return pos.X >= fpos.X and pos.Y >= fpos.Y and pos.X <= fpos.X + frame.TextBounds.X and pos.Y <= fpos.Y + frame.TextBounds.Y
             end
+        end,
+        ["has"] = function(obj, prop)
+            if isv2 then
+                return pcall(function()
+                    a = obj[prop]
+                end) ~= false
+            end
+
+            return obj[prop] ~= nil
         end
     }
     local ctypes = { -- i love how i used this in exactly NONE of the ui lib at all
@@ -54,13 +64,14 @@ local Draw do
 
     function Draw(type)
         local obj = Drawing.new(type)
-        local tbl = {obj = obj, type = type, name = type, parent = nil}
+        local tbl = {["obj"] = obj, type = type, name = type, parent = nil}
 
         function tbl:children(recursive)
             local c = {}
 
-            for i,v in tbl do
-                if i ~= "parent" and typeof(v) == "table" then
+            for i,v in next, tbl do
+                print(v)
+                if i ~= "parent" and i ~= "obj" and typeof(v) == "table" then
                     table.insert(c, v)
 
                     if recursive then
@@ -86,7 +97,7 @@ local Draw do
 
         return setmetatable(tbl, {
             __newindex = function(_, k, v)
-                if obj[k] ~= nil then
+                if funcs.has(obj, k) then
                     obj[k] = v
 
                     return
@@ -103,7 +114,7 @@ local Draw do
                 rawset(tbl, k, v)
             end,
             __index = function(a, b)
-                return obj[b] ~= nil and obj[b] or nil
+                return funcs.has(obj, b) and obj[b]
             end,
             __tostring = function()
                 return tbl.name
@@ -119,11 +130,11 @@ local Draw do
             if _ or input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
             local mpos = sv.UserInputService:GetMouseLocation()
 
-            for i,v in drag do
+            for i,v in next, drag do
                 if v.Visible and funcs.isinframe(v.obj, mpos) and (function()
-                    for i2,v2 in v:children(true) do
+                    for i2,v2 in next, v:children(true) do
                         if v2:isa "Square" and not v2.Filled then continue end
-                        if v2.Visible and v2.Opacity ~= 0 and funcs.isinframe(v2.obj, mpos) then return end
+                        if v2.Visible and v2.Transparency ~= 0 and funcs.isinframe(v2.obj, mpos) then return end
                     end
 
                     return true
@@ -131,7 +142,7 @@ local Draw do
                     offset = mpos - v.Position
                     local offsets = {}
 
-                    for _,v2 in v:children(true) do
+                    for _,v2 in next, v:children(true) do
                         offsets[_] = mpos - v2.Position
                     end
 
@@ -144,7 +155,7 @@ local Draw do
 
                         v.Position = sv.UserInputService:GetMouseLocation() - offset
 
-                        for _,v2 in v:children(true) do
+                        for _,v2 in next, v:children(true) do
                             v2.Position = sv.UserInputService:GetMouseLocation() - offsets[_]
                         end
                     end)
@@ -195,15 +206,64 @@ local function Box(frame, z, top)
     return d
 end
 
+local getGradientBitmap do -- THANK U TOPIT
+    local bitmapFormat = '\66\77\38\2\0\0\0\0\0\0\150\0\0\0\124\0\0\0\1\0\0\0\100\0\0\0\1\0\32\0\3\0\0\0\0\0\0\0\196\14\0\0\196\14\0\0\0\0\0\0\0\0\0\0\0\0\255\0\0\255\0\0\255\0\0\0\0\0\0\255\32\110\105\87\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\255\0\0\0\0\255\0\0\0\0\255\0' -- \207\149\255\255\207\149\255\255\207\149\255\255\207\149\255\255\207\149\255\254\207\149\255\250\207\149\255\247\207\149\255\244\207\149\255\241\207\149\255\239\207\149\255\236\207\149\255\232\207\149\255\230\207\149\255\227\207\149\255\224\207\149\255\222\207\149\255\219\207\149\255\217\207\149\255\213\207\149\255\210\207\149\255\207\207\149\255\204\207\149\255\202\207\149\255\199\207\149\255\196\207\149\255\192\207\149\255\190\207\149\255\187\207\149\255\185\207\149\255\181\207\149\255\179\207\149\255\176\207\149\255\174\207\149\255\171\207\149\255\167\207\149\255\164\207\149\255\162\207\149\255\159\207\149\255\156\207\149\255\153\207\149\255\150\207\149\255\148\207\149\255\145\207\149\255\143\207\149\255\140\207\149\255\136\207\149\255\133\207\149\255\131\207\149\255\128\207\149\255\125\207\149\255\122\207\149\255\119\207\149\255\116\207\149\255\113\207\149\255\111\207\149\255\108\207\149\255\105\207\149\255\102\207\149\255\100\207\149\255\97\207\149\255\94\207\149\255\92\207\149\255\89\207\149\255\86\207\149\255\83\207\149\255\80\207\149\255\77\207\149\255\74\207\149\255\71\207\149\255\68\207\149\255\65\207\149\255\63\207\149\255\60\207\149\255\57\207\149\255\55\207\149\255\52\207\149\255\48\207\149\255\45\207\149\255\42\207\149\255\40\207\149\255\37\207\149\255\34\207\149\255\31\207\149\255\28\207\149\255\26\207\149\255\23\207\149\255\20\207\149\255\17\207\149\255\14\207\149\255\12\207\149\255\8\207\149\255\6\207\149\255\4\207\149\255\0\207\149\255\0\207\149\255\0\207\149\255\0\207\149\255\0\207\149\255\0\207\149\255\0'
+
+    function getGradientBitmap(color)
+        local B, R, G = math.floor(color.B * 255), math.floor(color.R * 255), math.floor(color.G * 255)
+        local BGR = string.char(B) .. string.char(G) .. string.char(R)
+        local A = 0
+        local bitmap = bitmapFormat
+
+        for i = 100, 1, -1 do 
+            A = math.floor(255 * (i / 100))
+            bitmap ..= BGR .. string.char(A)
+        end
+
+        return bitmap
+    end
+end
+
 local function GetGradientBox(vis)
     local box = Draw "Image"
-
+    local color
     box.obj.Data = gradient
     box.Visible = vis
-    box.Color = Color3.new(.2, .2, .2)
     box.name = "GradientBox"
 
-    return box
+    if isv2 then
+        color = Draw "Square"
+        box.obj.Data = getGradientBitmap(Color3.new(.2, .2, .2))
+        color.Visible = vis
+        color.Filled = true
+        color.Color = Color3.new(.2, .2, .2)
+        color.Name = "GradientBoxV2"
+        color.ZIndex = -1
+    else
+        box.Color = Color3.new(.2, .2, .2)
+    end
+
+    return isv2 and setmetatable({}, {
+        __index = function(_, b)
+            return box[b]
+        end,
+        __newindex = function(_, k, v)
+            if k == "Color" then
+                color[k] = v
+                return
+            end
+
+            if k == "ZIndex" then
+                box[k] = v
+                color[k] = v - 1
+
+                return
+            end
+
+            box[k] = v
+            color[k] = v
+        end
+    }) or box
 end
 
 local function Lerp(a, b, t)
@@ -236,25 +296,69 @@ local function Ease(x)
     return math.sin((x * math.pi) / 2)
 end
 
+local function DeltaIter(start, _end, mult, callback)
+    local up
+    local rstep = sv.RunService.RenderStepped
+
+    if _end > start then
+        up = true
+    end
+
+    while true do
+        if up and start > _end then break end
+        if not up and _end > start then break end
+
+        start += rstep:wait() * (up and 1 or -1) * mult
+        task.spawn(callback, start)
+    end
+
+    rstep:wait()
+    callback(_end)
+end
+
 local function Scrolling(frame, options)
-    options = options or {scrollamount = 10, paddingbottom = 0}
+    options = options or {scrollamount = 10, paddingbottom = 0, scrollsize = frame.Size.Y * 2}
+    local scrollbar
+    local scrollposy = 0
+
+    if options.scrollbar then
+        scrollbar = GetGradientBox(frame.Visible)
+
+        scrollbar.ZIndex = frame.ZIndex + 1
+        --print(options.scrollsize / frame.Size.Y, frame.Size.Y, options.scrollsize)
+        scrollbar.Size = Vector2.new(4, options.scrollsize / frame.Size.Y)
+        scrollbar.Position = frame.Position + Vector2.new(frame.Size.X - 5, -1)
+        scrollbar.parent = frame
+        scrollbar.name = "scrollbar"
+
+        Box(scrollbar, frame.ZIndex + 1)
+    end
 
     table.insert(cons, sv.UserInputService.InputChanged:Connect(function(a, b)
         if b then return end
 
-        if a.UserInputType == Enum.UserInputType.MouseWheel and IsInFrame(frame, GetMousePosition()) and frame.Visible and frame.Opacity ~= 0 then
+        if a.UserInputType == Enum.UserInputType.MouseWheel and IsInFrame(frame, GetMousePosition()) and frame.Visible and frame.Transparency ~= 0 then
             local up = a.Position.Z > 0
+            (function()
+                if up and scrollposy >= options.scrollsize then return end
+                if not up and scrollposy <= 0 then return end
 
-            for i,v in frame:children(true) do
-                if (table.find({"l", "ts", "s"}, v.name) and v.parent == frame) then continue end
+                scrollposy += up and options.scrollamount or -options.scrollamount
+            end)()
+
+            for i,v in next, frame:children(true) do
+                if (table.find({"l", "ts", "s", "scrollbar"}, v.name) and (v.parent == frame or v.parent == scrollbar)) then continue end
 
                 task.spawn(function()
+                    if up and scrollposy >= options.scrollsize then return end
+                    if not up and scrollposy <= 0 then return end
+
                     for _ = 1, options.scrollamount / 5 do
                         v.Position += Vector2.new(0, (up and options.scrollamount or -options.scrollamount) / 5)
                         if v.Position.Y <= frame.Position.Y or v.Position.Y + (typeof(v.Size) == "Vector2" and v.Size or v.TextBounds).Y >= frame.Position.Y + frame.Size.Y - options.paddingbottom then
                             v.Visible = false
 
-                            for _, v2 in v:children(true) do
+                            for _, v2 in next, v:children(true) do
                                 v2.Visible = false
                             end
                         end
@@ -262,7 +366,7 @@ local function Scrolling(frame, options)
                         if v.Position.Y > frame.Position.Y and v.Position.Y + (typeof(v.Size) == "Vector2" and v.Size or v.TextBounds).Y < frame.Position.Y + frame.Size.Y - options.paddingbottom then
                             v.Visible = true
 
-                            for _, v2 in v:children(true) do
+                            for _, v2 in next, v:children(true) do
                                 v2.Visible = true
                             end
                         end
@@ -273,6 +377,11 @@ local function Scrolling(frame, options)
             end
         end
     end))
+
+    return function(newsettings) -- update func
+        scrollbar.Size = Vector2.new(4, newsettings.scrollsize / frame.Size.Y)
+        options = newsettings
+    end
 end
 
 local function IsInCircle(circle, pos)
@@ -312,7 +421,7 @@ local function List(list, name)
     text.name = name
     text.parent = main
 
-    for i,v in list do
+    for i,v in next, list do
         local option = Draw "Text"
         local box = Draw "Square"
 
@@ -336,7 +445,7 @@ local function List(list, name)
         local con = sv.UserInputService.InputBegan:Connect(function(a, _)
             if _ then return end
 
-            if a.UserInputType == Enum.UserInputType.MouseButton1 and option.Visible and option.Opacity ~= 0 and IsInFrame(box, GetMousePosition()) then
+            if a.UserInputType == Enum.UserInputType.MouseButton1 and option.Visible and option.Transparency ~= 0 and IsInFrame(box, GetMousePosition()) then
                 e:Fire(v)
 
                 table.foreach(lcons, function(_, v)
@@ -356,62 +465,13 @@ local function List(list, name)
 
     Box(main, 10, true)
     Box(main2, 11, true)
-    Scrolling(main2, {scrollamount = 20, paddingbottom = 2})
+    Scrolling(main2, {scrollamount = 20, paddingbottom = 2, scrollbar = true, scrollsize = 4 + ((#list - 1) * 20)})
 
     return e.Event:Wait()
 end
 
 local function rgb255(rgb)
     return rgb.R * 255, rgb.G * 255, rgb.B * 255
-end
-
-function lib:Chatlogs() -- someone test if this wok plsss
-    local box = GetGradientBox(true)
-    local ibox = GetGradientBox(true)
-    local text = Draw "Text"
-    
-    box.Size = Vector2.new(400, 300)
-    box.Position = Vector2.new(500, 500)
-    box.Visible = true
-    box.ZIndex = 20
-    box.draggable = true
-
-    text.Position = box.Position + Vector2.new(2)
-    text.Size = 18
-    text.parent = box
-    text.name = "title"
-    text.Text = "Chat logs"
-    text.Font = Drawing.Fonts.Monospace
-    text.Visible = true
-    text.ZINdex = 21
-    text.Color = Color3.new(1,1,1)
-    text.Outline = true
-
-    ibox.Position = box.Position + Vector2.new(10, 20)
-    ibox.Size = Vector2.new(380, 264)
-    ibox.Visible = true
-    ibox.ZIndex = 21
-    ibox.parent = box
-
-    Box(ibox, 21, true)
-    Box(box, 20, true)
-    local update = Scrolling(ibox, {
-        scrollamount = 16,
-        paddingbottom = -2
-    })
-
-    local function Add(plr, msg) -- oh fuck i got no clue
-        local txt = Draw "Text"
-        --txt.Position = 
-    end
-
-    return function()
-        box.obj:Destroy()
-
-        for i,v in box:chldren(true) do
-            v.obj:Desroy()
-        end
-    end
 end
 
 function lib:loader(name)
@@ -481,7 +541,7 @@ function lib:loader(name)
     ic.parent = box
     ic.name = "insidecircle"
 
-    for _,v in d do
+    for _,v in next, d do
         v.parent = mc
         v.name = "loadercirclethinngy"..tostring(_)
         v.Radius = 2
@@ -494,7 +554,7 @@ function lib:loader(name)
     con = sv.RunService.Heartbeat:Connect(function()
         i += 1
 
-        for _, v in d do
+        for _, v in next, d do
             v.Position = mc.Position + (Vector2.new(
                 math.sin(
                     math.rad(i + (_ * (360 / #d)))
@@ -519,10 +579,10 @@ function lib:loader(name)
     function loader:finish()
         task.spawn(function()
             for inc = 1, -.05, -.05 do
-                box.Opacity = inc
+                box.Transparency = inc
 
-                for _,v in box:children(true) do
-                    v.Opacity = inc
+                for _,v in next, box:children(true) do
+                    v.Transparency = inc
                 end
 
                 task.wait()
@@ -530,7 +590,7 @@ function lib:loader(name)
 
             box.obj:Remove()
 
-            for _,v in box:children(true) do
+            for _,v in next, box:children(true) do
                 v.obj:Remove()
             end
 
@@ -561,12 +621,12 @@ function lib:note(msg, settings) -- -> any if settings.type is question (returns
     local ret = settings.Question and Instance.new "BindableEvent" or nil
     local answered, con, tcon
 
-    for i,v in notes do
+    for i,v in next, notes do
         task.spawn(function()
             for inc = 1, settings.Question and 28 or 19 do
                 v.Position += Vector2.new(0, 2)
 
-                for _, c in v:children(true) do
+                for _, c in next, v:children(true) do
                     c.Position += Vector2.new(0, 2)
                 end
 
@@ -607,11 +667,11 @@ function lib:note(msg, settings) -- -> any if settings.type is question (returns
     text.parent = box2
     text.name = "text"
 
-    for i,v in settings.Question and settings.Options or {} do
+    for i,v in next, settings.Question and settings.Options or {} do
         local option = GetGradientBox(true)
         local ot = Draw "Text"
         local pos = 1
-        for _, v2 in opts do
+        for _, v2 in next, opts do
             pos += v2.Size.X + 5
         end
 
@@ -640,7 +700,7 @@ function lib:note(msg, settings) -- -> any if settings.type is question (returns
         if _ then return end
 
         if a.UserInputType == Enum.UserInputType.MouseButton1 then
-            for i,v in opts do
+            for i,v in next, opts do
                 if IsInFrame(v, GetMousePosition()) then
                     ret:Fire(i)
                     answered = true
@@ -656,14 +716,14 @@ function lib:note(msg, settings) -- -> any if settings.type is question (returns
         local t = tick()
         local ia = .01
 
-        for i,v in box:children(true) do
+        for i,v in next, box:children(true) do
             offsets[v] = v.Position.X - start.X
         end
 
         for i = 0, 1.01, .01 do
             box.Position = Vector2.new(Lerp(start.X, start.X + sizex + 40, Ease(i)), box.Position.Y)
 
-            for _,v in box:children(true) do
+            for _,v in next, box:children(true) do
                 v.Position = Vector2.new(Lerp(start.X, start.X + sizex + 40, Ease(i)) + offsets[v], v.Position.Y)
             end
 
@@ -672,7 +732,7 @@ function lib:note(msg, settings) -- -> any if settings.type is question (returns
 
         tcon = sv.RunService.Heartbeat:Connect(function()
             timer.Size = Vector2.new(math.clamp((tick() - t) / settings.Time * sizex, 1, sizex), timer.Size.Y)
-            timer.Opacity = math.acos(math.cos(ia * math.pi) / math.pi) - .8
+            timer.Transparency = math.acos(math.cos(ia * math.pi) / math.pi) - .8
             ia += .005
 
             if IsInFrame(box, GetMousePosition()) then
@@ -691,20 +751,20 @@ function lib:note(msg, settings) -- -> any if settings.type is question (returns
         for i = 1.2, -0.01, -.01 do
             box.Position = Vector2.new(Lerp(start.X, start.X + sizex + 40, Ease(i)), box.Position.Y)
 
-            for _,v in box:children(true) do
+            for _,v in next, box:children(true) do
                 v.Position = Vector2.new(Lerp(start.X, start.X + sizex + 40, Ease(i)) + offsets[v], v.Position.Y)
             end
 
             task.wait()
         end
 
-        for i,v in notes do
+        for i,v in next, notes do
             if v.Position.Y < box.Position.Y then continue end
             task.spawn(function()
                 for inc = 1, settings.Question and 28 or 19 do
                     v.Position -= Vector2.new(0, 2)
 
-                    for _, c in v:children(true) do
+                    for _, c in next, v:children(true) do
                         c.Position -= Vector2.new(0, 2)
                     end
 
@@ -744,7 +804,7 @@ function lib:bindlist()
         local sizex = 200
         local sizey = 25
 
-        for i,v in bts do
+        for i,v in next, bts do
             sizey += 20
 
             if main.Position.X + sizex - 6 < v.Position.X + v.TextBounds.X then
@@ -758,7 +818,7 @@ function lib:bindlist()
 
     local function len() -- i hate lua
         local i = 0
-        for _, v in bts do i+=1 end
+        for _, v in next, bts do i+=1 end
         return i
     end
 
@@ -817,7 +877,7 @@ function lib:bindlist()
         function bind:remove()
             table.remove(bts, table.find(bts, bt))
             bt.obj:Destroy()
-            for i,v in bts do
+            for i,v in next, bts do
                 v.Position -= Vector2.new(0, 20)
             end
             con:Disconnect()
@@ -840,7 +900,7 @@ function lib:togglelist()
 
     local function l()
         local i = 0
-        for _,v in objs do i+=1 end
+        for _,v in next, objs do i+=1 end
         return i
     end
 
@@ -860,7 +920,7 @@ function lib:togglelist()
     function togs:remove(name)
         objs[name].obj:Destroy()
 
-        for i,v in objs do
+        for i,v in next, objs do
             v.Position += Vector2.new(0, 26)
         end
     end
@@ -1032,7 +1092,7 @@ function lib:new(libname, logodata)
         logo.name = "logo"
         logo.obj.Data = logodata -- fuck you luau why do i always have to do obj.Data
         logo.ZIndex = 50
-        logo.Opacity = 1
+        logo.Transparency = 1
     end
 
     label.Visible = true
@@ -1054,9 +1114,9 @@ function lib:new(libname, logodata)
     Box(box, 1, true)
 
     local function SaveOps()
-        oldop[topbox] = topbox.Opacity
-        for _,v in topbox:children(true) do
-            oldop[v] = v.Opacity
+        oldop[topbox] = topbox.Transparency
+        for _,v in next, topbox:children(true) do
+            oldop[v] = v.Transparency
         end
     end
 
@@ -1073,33 +1133,27 @@ function lib:new(libname, logodata)
                 if not vis then
                     SaveOps()
 
-                    for __,v in topbox:children(true) do
-                        if v.Opacity == 0 then continue end
+                    for __,v in next, topbox:children(true) do
+                        if v.Transparency == 0 then continue end
 
                         table.insert(change, v)
                     end
                 else
-                    for __,v in topbox:children(true) do
+                    for __,v in next, topbox:children(true) do
                         if oldop[v] == 0 then continue end
 
                         table.insert(change, v)
                     end
                 end
 
-                local start = vis and 0 or 1
-                local down = vis
-                local hb = sv.RunService.Heartbeat
-
-                repeat
-                    start = down and start + (hb:Wait() * 8) or start - (hb:Wait() * 8)
-
-                    for __,v in change do
-                        v.Opacity = start
+                DeltaIter(vis and 0 or 1, vis and 1 or 0, 6, function(iter)
+                    for __,v in next, change do
+                        v.Transparency = iter
                     end
-                until start < 0 or start > 1
+                end)
 
-                for __,v in change do
-                    v.Opacity = vis and 1 or 0
+                for __,v in next, change do
+                    v.Transparency = vis and 1 or 0
                 end
             end
         end))
@@ -1111,7 +1165,7 @@ function lib:new(libname, logodata)
         local si = 0
         local par = GetGradientBox(true)
         par.Visible = true
-        par.Opacity = i == 1 and 1 or 0
+        par.Transparency = i == 1 and 1 or 0
         par.Position = box.Position + Vector2.new(5, 52)
         par.Size = Vector2.new(90, 329)
         par.parent = box
@@ -1119,7 +1173,7 @@ function lib:new(libname, logodata)
         par.ZIndex = 2
         table.foreach(Box(par, 2, true), function(_, v)
             v.Visible = true
-            v.Opacity = i == 1 and 1 or 0
+            v.Transparency = i == 1 and 1 or 0
         end)
 
         library.tabs[name] = {
@@ -1143,7 +1197,7 @@ function lib:new(libname, logodata)
             local sizex = GetTextSize(name, 16, Drawing.Fonts.Monospace).X + 8
             local pos = 0
 
-            for _,v in library.dtabs do
+            for _,v in next, library.dtabs do
                 pos += v.Size.X + 10
             end
 
@@ -1177,24 +1231,24 @@ function lib:new(libname, logodata)
                         local otab = library.tabs[name].tab
                         local ops = library.tabs[name].ops
 
-                        for _,v in library.tabs do
-                            if v.tab.Opacity ~= 0 then
-                                v.ops[v.tab] = v.tab.Opacity
+                        for _,v in next, library.tabs do
+                            if v.tab.Transparency ~= 0 then
+                                v.ops[v.tab] = v.tab.Transparency
 
-                                for _,v2 in v.tab:children(true) do
-                                    v.ops[v2] = v2.Opacity
+                                for _,v2 in next, v.tab:children(true) do
+                                    v.ops[v2] = v2.Transparency
                                 end
 
-                                v.tab.Opacity = 0
-                                for _,v2 in v.tab:children(true) do
-                                    v2.Opacity = 0
+                                v.tab.Transparency = 0
+                                for _,v2 in next, v.tab:children(true) do
+                                    v2.Transparency = 0
                                 end
                             end
                         end
 
-                        otab.Opacity = 1
-                        for _, v in otab:children(true) do
-                            v.Opacity = ops[v] or 1
+                        otab.Transparency = 1
+                        for _, v in next, otab:children(true) do
+                            v.Transparency = ops[v] or 1
                         end
                     end
                 end
@@ -1231,29 +1285,28 @@ function lib:new(libname, logodata)
                     if b then return end
 
                     if a.UserInputType == Enum.UserInputType.MouseButton1 then
-                        if IsInFrame(tbox, GetMousePosition()) and tbox.Visible and tbox.Opacity ~= 0 then
+                        if IsInFrame(tbox, GetMousePosition()) and tbox.Visible and tbox.Transparency ~= 0 then
                             local otab = library.tabs[name].sides[sname].tab
                             local ops = library.tabs[name].sides[sname].ops
 
-                            for _,v in library.tabs[name].sides do
-                                if v.tab.Opacity ~= 0 then
-                                    print(v.tab)
-                                    v.ops[v.tab] = v.tab.Opacity
+                            for _,v in next, library.tabs[name].sides do
+                                if v.tab.Transparency ~= 0 then
+                                    v.ops[v.tab] = v.tab.Transparency
 
-                                    for _,v2 in v.tab:children(true) do
-                                        v.ops[v2] = v2.Opacity
+                                    for _,v2 in next, v.tab:children(true) do
+                                        v.ops[v2] = v2.Transparency
                                     end
 
-                                    v.tab.Opacity = 0
-                                    for _,v2 in v.tab:children(true) do
-                                        v2.Opacity = 0
+                                    v.tab.Transparency = 0
+                                    for _,v2 in next, v.tab:children(true) do
+                                        v2.Transparency = 0
                                     end
                                 end
                             end
 
-                            otab.Opacity = 1
-                            for _, v in otab:children(true) do
-                                v.Opacity = ops[v] or v.op or 1
+                            otab.Transparency = 1
+                            for _, v in next, otab:children(true) do
+                                v.Transparency = ops[v] or v.op or 1
                             end
                         end
                     end
@@ -1270,12 +1323,12 @@ function lib:new(libname, logodata)
             wbox.Size = Vector2.new(580, 329)
             wbox.parent = tbox
             wbox.name = sname
-            wbox.Opacity = si == 1 and i == 1 and 1 or 0
-            Scrolling(wbox, {scrollamount = 25, paddingbottom = -2})
+            wbox.Transparency = si == 1 and i == 1 and 1 or 0
+            Scrolling(wbox, {scrollamount = 25, paddingbottom = -2, scrollsize = 30})
 
             table.foreach(Box(wbox, 2, true), function(_,v)
                 v.Visible = true
-                v.Opacity = si == 1 and i == 1 and 1 or 0
+                v.Transparency = si == 1 and i == 1 and 1 or 0
             end)
 
             function side:button(bname, callback)
@@ -1287,7 +1340,7 @@ function lib:new(libname, logodata)
                 bbox.Size = Vector2.new(570, 20)
                 bbox.parent = wbox
                 bbox.name = bname
-                bbox.Opacity = si == 1 and i == 1 and 1 or 0
+                bbox.Transparency = si == 1 and i == 1 and 1 or 0
 
                 text.ZIndex = 3
                 text.Visible = buttons < 13
@@ -1300,17 +1353,17 @@ function lib:new(libname, logodata)
                 text.Position = bbox.Position + (bbox.Size / 2) - Vector2.new(0, 10)
                 text.parent = bbox
                 text.name = "text"
-                text.Opacity = si == 1 and i == 1 and 1 or 0
+                text.Transparency = si == 1 and i == 1 and 1 or 0
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = true
-                    v.Opacity = si == 1 and i == 1 and 1 or 0
+                    v.Transparency = si == 1 and i == 1 and 1 or 0
                 end)
 
                 table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
                     if b or listopen then return end
 
-                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Opacity ~= 0 then
+                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Transparency ~= 0 then
                         if IsInFrame(bbox, GetMousePosition()) then
                             pcall(callback)
                         end
@@ -1331,7 +1384,7 @@ function lib:new(libname, logodata)
                 bbox.Size = Vector2.new(570, 20)
                 bbox.name = bname
                 bbox.parent = wbox
-                bbox.Opacity = si == 1 and i == 1 and 1 or 0
+                bbox.Transparency = si == 1 and i == 1 and 1 or 0
 
                 text.ZIndex = 3
                 text.Visible = buttons < 13
@@ -1343,7 +1396,7 @@ function lib:new(libname, logodata)
                 text.Position = bbox.Position + Vector2.new(4)
                 text.parent = bbox
                 text.name = bname
-                text.Opacity = si == 1 and i == 1 and 1 or 0
+                text.Transparency = si == 1 and i == 1 and 1 or 0
 
                 tb.Position = bbox.Position + bbox.Size - Vector2.new(20, 17)
                 tb.Size = Vector2.new(14, 14)
@@ -1353,28 +1406,28 @@ function lib:new(libname, logodata)
                 tb.Filled = true
                 tb.parent = bbox
                 tb.name = "tb"
-                tb.Opacity = i == 1 and default and 1 or 0
-                tb.op = default and 1 or 0
+                tb.Transparency = default and si == 1 and i == 1 and 1 or 0
+                tb.op = default and si == 1 and i == 1 and 1 or 0
 
                 table.foreach(Box(tb, 3), function(_,v)
                     v.Visible = buttons < 13
-                    v.Opacity = si == 1 and i == 1 and 1 or 0
+                    v.Transparency = si == 1 and i == 1 and 1 or 0
                 end)
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = buttons < 13
-                    v.Opacity = si == 1 and i == 1 and 1 or 0
+                    v.Transparency = si == 1 and i == 1 and 1 or 0
                 end)
 
                 table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
                     if b or listopen then return end
 
-                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Opacity ~= 0 then
+                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Transparency ~= 0 then
                         if IsInFrame(bbox, GetMousePosition()) then
                             default = not default
                             task.spawn(function()
                                 for inc = default and 0 or 1, default and 1 or 0, default and .05 or -.05 do
-                                    tb.Opacity = inc
+                                    tb.Transparency = inc
                                     task.wait()
                                 end
                             end)
@@ -1398,7 +1451,7 @@ function lib:new(libname, logodata)
                 bbox.Size = Vector2.new(570, 20)
                 bbox.name = bname
                 bbox.parent = wbox
-                bbox.Opacity = si == 1 and i == 1 and 1 or 0
+                bbox.Transparency = si == 1 and i == 1 and 1 or 0
 
                 b2box.Position = bbox.Position
                 b2box.ZIndex = 3
@@ -1406,7 +1459,7 @@ function lib:new(libname, logodata)
                 b2box.Color = lib.AccentColor
                 b2box.parent = bbox
                 b2box.name = "b2box"
-                b2box.Opacity = si == 1 and i == 1 and 1 or 0
+                b2box.Transparency = si == 1 and i == 1 and 1 or 0
 
                 text.ZIndex = 5
                 text.Visible = buttons < 13
@@ -1419,17 +1472,17 @@ function lib:new(libname, logodata)
                 text.Position = bbox.Position + (bbox.Size / 2) - Vector2.new(0, 10)
                 text.parent = bbox
                 text.name = "text"
-                text.Opacity = si == 1 and i == 1 and 1 or 0
+                text.Transparency = si == 1 and i == 1 and 1 or 0
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = buttons < 13
-                    v.Opacity = si == 1 and i == 1 and 1 or 0
+                    v.Transparency = si == 1 and i == 1 and 1 or 0
                 end)
 
                 table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
                     if b or listopen then return end
 
-                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Opacity ~= 0 and IsInFrame(bbox, GetMousePosition()) then
+                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Transparency ~= 0 and IsInFrame(bbox, GetMousePosition()) then
                         con = sv.RunService.Heartbeat:Connect(function()
                             local p = math.clamp((GetMousePosition().X - bbox.Position.X) / (bbox.Size.X), 0, 1)
 					        local vtn = Lerp(min, max, p)
@@ -1480,7 +1533,7 @@ function lib:new(libname, logodata)
                 bbox.Size = Vector2.new(570, 20)
                 bbox.name = bname
                 bbox.parent = wbox
-                bbox.Opacity = si == 1 and i == 1 and 1 or 0
+                bbox.Transparency = si == 1 and i == 1 and 1 or 0
 
                 text.ZIndex = 3
                 text.Visible = buttons < 13
@@ -1492,7 +1545,7 @@ function lib:new(libname, logodata)
                 text.Position = bbox.Position + Vector2.new(4)
                 text.parent = bbox
                 text.name = bname
-                text.Opacity = si == 1 and i == 1 and 1 or 0
+                text.Transparency = si == 1 and i == 1 and 1 or 0
 
                 tb.Position = bbox.Position + bbox.Size - Vector2.new(20, 17)
                 tb.Size = Vector2.new(14, 14)
@@ -1500,7 +1553,7 @@ function lib:new(libname, logodata)
                 tb.ZIndex = 3
                 tb.parent = bbox
                 tb.name = "tb"
-                tb.Opacity = si == 1 and i == 1 and 1 or 0
+                tb.Transparency = si == 1 and i == 1 and 1 or 0
 
                 key.ZIndex = 3
                 key.Visible = buttons < 13
@@ -1512,23 +1565,23 @@ function lib:new(libname, logodata)
                 key.Position = tb.Position + Vector2.new(2, -2)
                 key.parent = bbox
                 key.name = "key"
-                key.Opacity = si == 1 and i == 1 and 1 or 0
+                key.Transparency = si == 1 and i == 1 and 1 or 0
 
                 keybox = Box(tb, 3)
                 table.foreach(keybox, function(_,v)
                     v.Visible = buttons < 13
-                    v.Opacity = si == 1 and i == 1 and 1 or 0
+                    v.Transparency = si == 1 and i == 1 and 1 or 0
                 end)
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = buttons < 13
-                    v.Opacity = si == 1 and i == 1 and 1 or 0
+                    v.Transparency = si == 1 and i == 1 and 1 or 0
                 end)
 
                 table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
                     if b or is or listopen then return end
 
-                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Opacity ~= 0 then
+                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Transparency ~= 0 then
                         if IsInFrame(bbox, GetMousePosition()) then
                             Update("...")
                             is = true
@@ -1564,7 +1617,7 @@ function lib:new(libname, logodata)
                 bbox.Size = Vector2.new(570, 20)
                 bbox.parent = wbox
                 bbox.name = bname
-                bbox.Opacity = si == 1 and i == 1 and 1 or 0
+                bbox.Transparency = si == 1 and i == 1 and 1 or 0
 
                 text.ZIndex = 3
                 text.Visible = buttons < 13
@@ -1577,17 +1630,17 @@ function lib:new(libname, logodata)
                 text.Position = bbox.Position + (bbox.Size / 2) - Vector2.new(0, 10)
                 text.parent = bbox
                 text.name = bname
-                text.Opacity = si == 1 and i == 1 and 1 or 0
+                text.Transparency = si == 1 and i == 1 and 1 or 0
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = true
-                    v.Opacity = si == 1 and i == 1 and 1 or 0
+                    v.Transparency = si == 1 and i == 1 and 1 or 0
                 end)
 
                 table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
                     if b then return end
 
-                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Opacity ~= 0 then
+                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Transparency ~= 0 then
                         if IsInFrame(bbox, GetMousePosition()) then
                             local at = List(list, bname)
 
@@ -1612,7 +1665,7 @@ function lib:new(libname, logodata)
                 bbox.Size = Vector2.new(570, 20)
                 bbox.name = bname
                 bbox.parent = wbox
-                bbox.Opacity = si == 1 and i == 1 and 1 or 0
+                bbox.Transparency = si == 1 and i == 1 and 1 or 0
 
                 text.ZIndex = 3
                 text.Visible = buttons < 13
@@ -1624,7 +1677,7 @@ function lib:new(libname, logodata)
                 text.Position = bbox.Position + Vector2.new(4)
                 text.parent = bbox
                 text.name = bname
-                text.Opacity = si == 1 and i == 1 and 1 or 0
+                text.Transparency = si == 1 and i == 1 and 1 or 0
 
                 tb.Position = bbox.Position + bbox.Size - Vector2.new(20, 17)
                 tb.Size = Vector2.new(14, 14)
@@ -1634,16 +1687,16 @@ function lib:new(libname, logodata)
                 tb.Filled = true
                 tb.parent = bbox
                 tb.name = "tb"
-                tb.Opacity = si == 1 and i == 1 and 1 or 0
+                tb.Transparency = si == 1 and i == 1 and 1 or 0
 
                 table.foreach(Box(tb, 3), function(_,v)
                     v.Visible = buttons < 13
-                    v.Opacity = si == 1 and i == 1 and 1 or 0
+                    v.Transparency = si == 1 and i == 1 and 1 or 0
                 end)
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = buttons < 13
-                    v.Opacity = si == 1 and i == 1 and 1 or 0
+                    v.Transparency = si == 1 and i == 1 and 1 or 0
                 end)
 
                 do
@@ -1667,7 +1720,7 @@ function lib:new(libname, logodata)
                 table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
                     if b or listopen then return end
 
-                    if colorbox and IsInFrame(bbox, GetMousePosition()) and bbox.Visible and bbox.Opacity ~= 0 then
+                    if colorbox and IsInFrame(bbox, GetMousePosition()) and bbox.Visible and bbox.Transparency ~= 0 then
                         colorbox.obj:Remove()
 
                         table.foreach(colorbox:children(true), function(_, v)
@@ -1681,7 +1734,7 @@ function lib:new(libname, logodata)
                         return
                     end
 
-                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Opacity ~= 0 then
+                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Transparency ~= 0 then
                         if IsInFrame(bbox, GetMousePosition()) then
                             colorbox = GetGradientBox(true)
                             local gbox = GetGradientBox(true)
@@ -1933,7 +1986,7 @@ function lib:new(libname, logodata)
                 bbox.Size = Vector2.new(570, 20)
                 bbox.name = bname
                 bbox.parent = wbox
-                bbox.Opacity = si == 1 and i == 1 and 1 or 0
+                bbox.Transparency = si == 1 and i == 1 and 1 or 0
 
                 text.ZIndex = 3
                 text.Visible = buttons < 13
@@ -1945,7 +1998,7 @@ function lib:new(libname, logodata)
                 text.Position = bbox.Position + Vector2.new(4)
                 text.parent = bbox
                 text.name = bname
-                text.Opacity = si == 1 and i == 1 and 1 or 0
+                text.Transparency = si == 1 and i == 1 and 1 or 0
 
                 tb.Position = text.Position + Vector2.new(text.TextBounds.X + 10, 3)
                 tb.Size = Vector2.new(bbox.Size.X - 9 - (text.TextBounds.X + 10), 14)
@@ -1953,7 +2006,7 @@ function lib:new(libname, logodata)
                 tb.ZIndex = 3
                 tb.parent = bbox
                 tb.name = "tb"
-                tb.Opacity = si == 1 and i == 1 and 1 or 0
+                tb.Transparency = si == 1 and i == 1 and 1 or 0
 
                 tbtext.ZIndex = 3
                 tbtext.Visible = buttons < 13
@@ -1965,22 +2018,22 @@ function lib:new(libname, logodata)
                 tbtext.Position = tb.Position + Vector2.new(2, -2)
                 tbtext.parent = tb
                 tbtext.name = backtext
-                tbtext.Opacity = si == 1 and i == 1 and 1 or 0
+                tbtext.Transparency = si == 1 and i == 1 and 1 or 0
 
                 table.foreach(Box(tb, 3), function(_,v)
                     v.Visible = buttons < 13
-                    v.Opacity = si == 1 and i == 1 and 1 or 0
+                    v.Transparency = si == 1 and i == 1 and 1 or 0
                 end)
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = buttons < 13
-                    v.Opacity = si == 1 and i == 1 and 1 or 0
+                    v.Transparency = si == 1 and i == 1 and 1 or 0
                 end)
 
                 table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
                     if b or listopen then return end
 
-                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Opacity ~= 0 then
+                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Transparency ~= 0 then
                         if IsInFrame(tb, GetMousePosition()) then
                             local cb = Instance.new("TextBox", sv.CoreGui)
                             cb:CaptureFocus()
@@ -2029,7 +2082,7 @@ function lib:new(libname, logodata)
                 bbox.Size = Vector2.new(570, 20)
                 bbox.name = bname
                 bbox.parent = wbox
-                bbox.Opacity = si == 1 and i == 1 and 1 or 0
+                bbox.Transparency = si == 1 and i == 1 and 1 or 0
 
                 text.ZIndex = 3
                 text.Visible = buttons < 13
@@ -2041,7 +2094,7 @@ function lib:new(libname, logodata)
                 text.Position = bbox.Position + Vector2.new(4)
                 text.parent = bbox
                 text.name = bname
-                text.Opacity = si == 1 and i == 1 and 1 or 0
+                text.Transparency = si == 1 and i == 1 and 1 or 0
 
                 tb.Position = bbox.Position + bbox.Size - Vector2.new(20, 17)
                 tb.Size = Vector2.new(14, 14)
@@ -2049,7 +2102,7 @@ function lib:new(libname, logodata)
                 tb.ZIndex = 3
                 tb.parent = bbox
                 tb.name = "tb"
-                tb.Opacity = si == 1 and i == 1 and 1 or 0
+                tb.Transparency = si == 1 and i == 1 and 1 or 0
 
                 angle.ZIndex = 3
                 angle.Visible = buttons < 13
@@ -2060,17 +2113,17 @@ function lib:new(libname, logodata)
                 angle.Position = tb.Position + Vector2.new(2, -2)
                 angle.parent = bbox
                 angle.name = "key"
-                angle.Opacity = si == 1 and i == 1 and 1 or 0
+                angle.Transparency = si == 1 and i == 1 and 1 or 0
 
                 anglebox = Box(tb, 3)
                 table.foreach(anglebox, function(_,v)
                     v.Visible = buttons < 13
-                    v.Opacity = si == 1 and i == 1 and 1 or 0
+                    v.Transparency = si == 1 and i == 1 and 1 or 0
                 end)
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = buttons < 13
-                    v.Opacity = si == 1 and i == 1 and 1 or 0
+                    v.Transparency = si == 1 and i == 1 and 1 or 0
                 end)
 
                 do
@@ -2107,21 +2160,19 @@ function lib:new(libname, logodata)
                         return
                     end
 
-                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Opacity ~= 0 and not abox then
+                    if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Transparency ~= 0 and not abox then
                         if IsInFrame(bbox, GetMousePosition()) then
                             abox = GetGradientBox(true)
                             local a2box = GetGradientBox(true)
                             local title = Draw "Text"
                             circle = Draw "Circle"
                             vpos = Draw "Square"
-                            local slide = Draw "Square"
                             amount = Draw "Text"
                             local con
-                            table.insert(accents, slide)
                             table.insert(accents, circle)
 
                             abox.Position = tb.Position + tb.Size + Vector2.new(40)
-                            abox.Size = Vector2.new(200, 250)
+                            abox.Size = Vector2.new(200, 240)
                             abox.name = "abox"
                             abox.draggable = true
                             abox.ZIndex = 7
@@ -2138,7 +2189,7 @@ function lib:new(libname, logodata)
                             title.name = "title"
 
                             a2box.Position = abox.Position + Vector2.new(5, 26)
-                            a2box.Size = Vector2.new(190, 190)
+                            a2box.Size = Vector2.new(190, 180)
                             a2box.name = "abox"
                             a2box.ZIndex = 8
                             a2box.parent = abox
@@ -2161,14 +2212,6 @@ function lib:new(libname, logodata)
                             vpos.Visible = true
                             vpos.Filled = true
 
-                            slide.Position = a2box.Position + Vector2.new(5, 178)
-                            slide.parent = a2box
-                            slide.Visible = true
-                            slide.Size = Vector2.new(180, 7)
-                            slide.Color = lib.AccentColor
-                            slide.ZIndex = 9
-                            slide.Filled = true
-
                             amount.ZIndex = 9
                             amount.Visible = true
                             amount.Outline = true
@@ -2181,15 +2224,13 @@ function lib:new(libname, logodata)
                             amount.parent = circle
                             amount.name = "amount"
 
-                            Box(slide, 9)
-
                             local neg = GetGradientBox(true)
                             local nt = Draw "Text"
 
                             neg.name = "neg"
                             neg.parent = abox
                             neg.ZIndex = 8
-                            neg.Position = abox.Position + Vector2.new(5, 225)
+                            neg.Position = abox.Position + Vector2.new(5, 215)
                             neg.Size = Vector2.new(20, 20)
                             neg.Color = Color3.new(.1, .1, .1)
 
@@ -2210,7 +2251,7 @@ function lib:new(libname, logodata)
                             spin.name = "spin"
                             spin.parent = abox
                             spin.ZIndex = 8
-                            spin.Position = abox.Position + Vector2.new(30, 225)
+                            spin.Position = abox.Position + Vector2.new(30, 215)
                             spin.Size = Vector2.new(20, 20)
                             spin.Color = Color3.new(.1, .1, .1)
 
@@ -2262,10 +2303,10 @@ function lib:new(libname, logodata)
                                             local ang = math.atan2(dir.Y, dir.X) % (math.pi * 2)
                                             vpos.Position = circle.Position + Vector2.new(math.cos(ang) * 73, math.sin(ang) * 73)
                                             ang *= (isn and -1 or 1)
-                                            amount.Text = tostring(math.round(math.deg(ang))).."°"
-                                            default = ang
+                                            default = math.round(math.deg(ang))
+                                            amount.Text = tostring(default).."°"
                                             pcall(callback, ang)
-                                            Update(tostring(math.round(math.deg(ang))).."°")
+                                            Update(tostring(default).."°")
                                         end)
 
                                         table.insert(cons, con)
@@ -2303,7 +2344,7 @@ function lib:new(libname, logodata)
     function library:accent(newcolor)
         lib.AccentColor = newcolor
 
-        for _,v in accents do
+        for _,v in next, accents do
             v.Color = newcolor
         end
     end
@@ -2311,6 +2352,13 @@ function lib:new(libname, logodata)
     SaveOps()
 
     return library
+end
+
+if isv2 then
+    lib:note("This ui is not meant support syn v2", {
+        Error = true,
+        Time = 10,
+    })
 end
 
 return lib
@@ -2340,6 +2388,7 @@ return lib
         Time = 2
     })
 
+
     local j = lib:new("Professional Generation", syn.request({Url = "https://cdn.discordapp.com/attachments/907173542972502072/1081826251758653540/1f602.png"}).Body) -- make library -> table (2nd arg is optional for a logo)
     local b = j:tab"Main tab" -- new tab with name -> table
     local t = b:side "side tab" -- new side tab with name -> table
@@ -2350,13 +2399,13 @@ return lib
     t:toggle("toggle false", false, print) -- name, default, callback -> boolean
     t:slider("slider", 0, 100, 50, true, print) -- name, minimum, maximum, default, precise, callback -> number
     t:bind("bind", Enum.KeyCode.LeftShift, print) -- name, default, callback -> EnumItem
-    t:list("list", {'real', 'and', 'true'}, print) -- name, list, callback -> any
+    t:list("list", table.create(10, "nigger"), print) -- name, list, callback -> any
     t:colorpicker('colorpicker', lib.AccentColor, function(color) -- name, default, callback -> Color3
         j:accent(color)
     end)
     t:textbox("textbox", "text", print) -- name, background text, callback -> string
     t:angler("angler", 90, print) -- name, default angle, callback -> number (You need to manually convert it to an angle through math.rad)
-    b:side "stab2":button("ninjas", print)
+    b:side "stab2":toggle("ninjas", true, print)
     j:tab"MONEY HACK"
 
     task.wait(10)
