@@ -1,14 +1,14 @@
 --[==[
-    I did most of the library (me sawd yes me)
+    I did most of the lib (me sawd yes me)
 
     thank topit for the colorpicker gradient images
     THANK FRICK FOR THE ANGLER MATH THAT ONE RLY SUCKED FIXING (he pro)
 ]==]
 
 local cams = workspace.CurrentCamera.ViewportSize
-local gradient = syn.request({Url = "https://media.discordapp.net/attachments/907173542972502072/1076735971749535845/angryimg.png"}).Body
-local colorpgradient = syn.request({Url = "https://media.discordapp.net/attachments/907173542972502072/1079247178410774630/overlay3.png"}).Body
-local huegradient = syn.request({Url = "https://media.discordapp.net/attachments/907173542972502072/1079217266744381442/hue.png"}).Body
+local gradient = syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/angryimg.png?raw=true"}).Body
+local colorpgradient = syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/overlay3.png?raw=true"}).Body
+local huegradient = syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/hue.png?raw=true"}).Body
 local startpos = (cams / 2) - Vector2.new(300, 200)
 local lib = {
     AccentColor = Color3.new(0.078431, 0.333333, 0.878431)
@@ -848,7 +848,7 @@ end
         }
     }
     -- sdata here cuz ik people only gonna use the ui lib
-    local sdata = syn.request({Url = "https://cdn.discordapp.com/attachments/907173542972502072/1081870705471262760/334-3349023_free-white-settings-icon-png-tool-icon-white.png"}).Body
+    local sdata = syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/334-3349023_free-white-settings-icon-png-tool-icon-white.png?raw=true"}).Body
 
     local box = GetGradientBox(true)
     local listbb = GetGradientBox(true)
@@ -979,7 +979,7 @@ function lib:new(libname, logodata)
         },
         dtabs = {}
     }
-    local i = 0
+    local tabi = 0
     local listopen
 
     local topbox = GetGradientBox(true)
@@ -1067,8 +1067,9 @@ function lib:new(libname, logodata)
 
     function library:tab(name)
         local tab = {}
-        i += 1
-        local si = 0
+        tabi += 1
+        local i = tabi
+        local sii = 0
         local par = GetGradientBox(true)
         par.Visible = true
         par.Transparency = i == 1 and 1 or 0
@@ -1163,8 +1164,10 @@ function lib:new(libname, logodata)
 
         function tab:side(sname)
             local tbox = GetGradientBox(true)
+            sii += 1
+            local si = sii
             tbox.Size = Vector2.new(80, 20)
-            tbox.Position = par.Position + Vector2.new(5, 5 + (si * 27))
+            tbox.Position = par.Position + Vector2.new(5, 5 + ((si - 1) * 27))
             tbox.ZIndex = 2
             tbox.parent = par
             tbox.name = sname
@@ -1184,8 +1187,6 @@ function lib:new(libname, logodata)
                 tl.parent = tbox
                 tl.name = "label"
                 tl.ZIndex = 2
-
-                si += 1
 
                 table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
                     if b then return end
@@ -2423,7 +2424,7 @@ end
 return lib, {["GetGradientBox"] = GetGradientBox, ["Draw"] = Draw, ["Scrolling"] = Scrolling, ["GetTextSize"] = GetTextSize, ["DeltaIter"] = DeltaIter, ["Ease"] = Ease, ["IsInFrame"] = IsInFrame, ["IsInCircle"] = IsInCircle}
 
 --[==[
-	-- local lib = syn.request({Url = "https://raw.githubusercontent.com/GFXTI/ProfessionalGeneration/main/Library.lua"}).Body
+
     local binds = lib:bindlist()
     local bind = binds:add("Bind down", Enum.KeyCode.X, true, print)
     binds:add("Bind hold", Enum.KeyCode.Z, false, print)
@@ -2447,7 +2448,8 @@ return lib, {["GetGradientBox"] = GetGradientBox, ["Draw"] = Draw, ["Scrolling"]
         Time = 2
     })
 
-    local j = lib:new("Professional Generation", syn.request({Url = "https://cdn.discordapp.com/attachments/907173542972502072/1081826251758653540/1f602.png"}).Body) -- make library -> table (2nd arg is optional for a logo)
+    local j, libfuncs = syn.request({"https://raw.githubusercontent.com/GFXTI/ProfessionalGeneration/main/Library.lua"}).Body
+    --local j = lib:new("Professional Generation", syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/pglogo.png?raw=true"}).Body) -- make library -> table (2nd arg is optional for a logo)
     local b = j:tab"Main tab" -- new tab with name -> table
     local t = b:side "side tab" -- new side tab with name -> table
     t:button("button", function() -- name, callback
