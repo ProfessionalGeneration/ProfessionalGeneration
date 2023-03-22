@@ -13,6 +13,7 @@ local startpos = (cams / 2) - Vector2.new(300, 200)
 local lib = {
     AccentColor = Color3.new(0.078431, 0.333333, 0.878431)
 }
+local DeltaIter, Lerp
 local notes = {}
 local cons = {}
 local accents = {}
@@ -21,9 +22,9 @@ local sv = setmetatable({}, {__index = function(_, a)
     return game:GetService(a)
 end})
 local isv2 = select(2, identifyexecutor()):find "v2"
-local Draw do
+local Draw, funcs do
     local drag = {}
-    local funcs = {
+    funcs = {
         ["isinframe"] = function(frame, pos)
             if table.find({"Image", "Square"}, tostring(frame)) then
                 return pos.X >= frame.Position.X and pos.Y >= frame.Position.Y and pos.X <= frame.Position.X + frame.Size.X and pos.Y <= frame.Position.Y + frame.Size.Y
@@ -70,7 +71,6 @@ local Draw do
             local c = {}
 
             for i,v in next, tbl do
-                print(v)
                 if i ~= "parent" and i ~= "obj" and typeof(v) == "table" then
                     table.insert(c, v)
 
@@ -93,6 +93,17 @@ local Draw do
             assert(ctypes[ctype], "no connection type found")
 
             return ctypes[ctype](tbl.obj).Event:Connect(callback)
+        end
+
+        function tbl:ease(speed, props)
+
+            for i,v in next, props do
+                local old = v
+
+                task.spawn(DeltaIter, 0, 1, speed, function(inc)
+                    obj[i] = type(v) == "number" and Lerp(old, v, inc) or old:lerp(v, inc)
+                end)
+            end
         end
 
         return setmetatable(tbl, {
@@ -266,7 +277,7 @@ local function GetGradientBox(vis)
     }) or box
 end
 
-local function Lerp(a, b, t)
+function Lerp(a, b, t)
     return a + (b - a) * t
 end
 
@@ -296,7 +307,7 @@ local function Ease(x)
     return math.sin((x * math.pi) / 2)
 end
 
-local function DeltaIter(start, _end, mult, callback)
+function DeltaIter(start, _end, mult, callback)
     local up
     local rstep = sv.RunService.RenderStepped
 
@@ -317,42 +328,20 @@ local function DeltaIter(start, _end, mult, callback)
 end
 
 local function Scrolling(frame, options)
-    options = options or {scrollamount = 10, paddingbottom = 0, scrollsize = frame.Size.Y * 2}
+    options = options or {scrollamount = 10, paddingbottom = 0}
     local scrollbar
     local scrollposy = 0
-
-    if options.scrollbar then
-        scrollbar = GetGradientBox(frame.Visible)
-
-        scrollbar.ZIndex = frame.ZIndex + 1
-        --print(options.scrollsize / frame.Size.Y, frame.Size.Y, options.scrollsize)
-        scrollbar.Size = Vector2.new(4, options.scrollsize / frame.Size.Y)
-        scrollbar.Position = frame.Position + Vector2.new(frame.Size.X - 5, -1)
-        scrollbar.parent = frame
-        scrollbar.name = "scrollbar"
-
-        Box(scrollbar, frame.ZIndex + 1)
-    end
 
     table.insert(cons, sv.UserInputService.InputChanged:Connect(function(a, b)
         if b then return end
 
         if a.UserInputType == Enum.UserInputType.MouseWheel and IsInFrame(frame, GetMousePosition()) and frame.Visible and frame.Transparency ~= 0 then
             local up = a.Position.Z > 0
-            (function()
-                if up and scrollposy >= options.scrollsize then return end
-                if not up and scrollposy <= 0 then return end
-
-                scrollposy += up and options.scrollamount or -options.scrollamount
-            end)()
 
             for i,v in next, frame:children(true) do
                 if (table.find({"l", "ts", "s", "scrollbar"}, v.name) and (v.parent == frame or v.parent == scrollbar)) then continue end
 
                 task.spawn(function()
-                    if up and scrollposy >= options.scrollsize then return end
-                    if not up and scrollposy <= 0 then return end
-
                     for _ = 1, options.scrollamount / 5 do
                         v.Position += Vector2.new(0, (up and options.scrollamount or -options.scrollamount) / 5)
                         if v.Position.Y <= frame.Position.Y or v.Position.Y + (typeof(v.Size) == "Vector2" and v.Size or v.TextBounds).Y >= frame.Position.Y + frame.Size.Y - options.paddingbottom then
@@ -377,11 +366,6 @@ local function Scrolling(frame, options)
             end
         end
     end))
-
-    return function(newsettings) -- update func
-        scrollbar.Size = Vector2.new(4, newsettings.scrollsize / frame.Size.Y)
-        options = newsettings
-    end
 end
 
 local function IsInCircle(circle, pos)
@@ -390,84 +374,6 @@ local function IsInCircle(circle, pos)
     if mag >= circle.Radius - circle.Thickness and mag <= circle.Radius + circle.Thickness then
         return mag
     end
-end
-
-local function List(list, name)
-    local e = Instance.new "BindableEvent"
-    local main = GetGradientBox(true)
-    local text = Draw "Text"
-    local main2 = GetGradientBox(true)
-    local lcons = {}
-
-    main.ZIndex = 10
-    main.Position = (cams / 2) - Vector2.new(610, 65)
-    main.Size = Vector2.new(240, 125)
-    main.draggable = true
-
-    main2.ZIndex = 10
-    main2.Position = main.Position + Vector2.new(5, 30)
-    main2.Size = Vector2.new(230, 90)
-    main2.parent = main
-    main2.name = "main2"
-
-    text.ZIndex = 11
-    text.Visible = true
-    text.Outline = true
-    text.Color = Color3.new(1,1,1)
-    text.Size = 15
-    text.Font = Drawing.Fonts.Monospace
-    text.Text = name
-    text.Position = main.Position + Vector2.new(4, 4)
-    text.name = name
-    text.parent = main
-
-    for i,v in next, list do
-        local option = Draw "Text"
-        local box = Draw "Square"
-
-        box.ZIndex = 12
-        box.Position = main2.Position + Vector2.new(4, 4) + Vector2.new(0, 20 * (i - 1))
-        box.Size = Vector2.new(220, 15)
-        box.parent = main2
-        Box(box, 12)
-
-        option.Visible = i < 4
-        option.ZIndex = 13
-        option.Outline = true
-        option.Color = Color3.new(1,1,1)
-        option.Size = 15
-        option.Font = Drawing.Fonts.Monospace
-        option.Text = tostring(v)
-        option.Position = box.Position + Vector2.new(2)
-        option.parent = box
-        option.name = tostring(v)
-
-        local con = sv.UserInputService.InputBegan:Connect(function(a, _)
-            if _ then return end
-
-            if a.UserInputType == Enum.UserInputType.MouseButton1 and option.Visible and option.Transparency ~= 0 and IsInFrame(box, GetMousePosition()) then
-                e:Fire(v)
-
-                table.foreach(lcons, function(_, v)
-                    v:Disconnect()
-                end)
-
-                main.obj:Remove()
-                table.foreach(main:children(true), function(_, v)
-                    v.obj:Remove()
-                end)
-            end
-        end)
-
-        table.insert(cons, con)
-        table.insert(lcons, con)
-    end
-
-    Box(main, 10, true)
-    Box(main2, 11, true)
-    Scrolling(main2, {scrollamount = 20, paddingbottom = 2, scrollbar = true, scrollsize = 4 + ((#list - 1) * 20)})
-
-    return e.Event:Wait()
 end
 
 local function rgb255(rgb)
@@ -1426,10 +1332,14 @@ function lib:new(libname, logodata)
                         if IsInFrame(bbox, GetMousePosition()) then
                             default = not default
                             task.spawn(function()
-                                for inc = default and 0 or 1, default and 1 or 0, default and .05 or -.05 do
+                                --[[for inc = default and 0 or 1, default and 1 or 0, default and .05 or -.05 do
                                     tb.Transparency = inc
                                     task.wait()
-                                end
+                                end]]
+
+                                DeltaIter(default and 0 or 1, default and 1 or 0, 8, function(inc)
+                                    tb.Transparency = inc
+                                end)
                             end)
                             pcall(callback, default)
                         end
@@ -1611,6 +1521,8 @@ function lib:new(libname, logodata)
             function side:list(bname, list, callback)
                 local bbox = GetGradientBox(buttons < 13)
                 local text = Draw "Text"
+                local lbox
+                local tcon
 
                 bbox.ZIndex = 3
                 bbox.Position = wbox.Position + Vector2.new(5, 5 + (25 * buttons))
@@ -1642,10 +1554,157 @@ function lib:new(libname, logodata)
 
                     if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Transparency ~= 0 then
                         if IsInFrame(bbox, GetMousePosition()) then
-                            local at = List(list, bname)
+                            if lbox then
+                                lbox.obj:Destroy()
 
-                            text.Text = ("%s [%s]"):format(bname, tostring(at))
-                            pcall(callback, at)
+                                table.foreach(lbox:children(true), function(_, v)
+                                    v.obj:Destroy()
+                                end)
+
+                                lbox = nil
+                                tcon:Disconnect()
+                                return
+                            end
+
+                            lbox = GetGradientBox(true)
+                            local scbox = GetGradientBox(true)
+                            local title = Draw "Text"
+                            local tb = GetGradientBox(true)
+                            local tbtext = Draw "Text"
+
+                            lbox.Position = bbox.Position + Vector2.new(bbox.Size.X + 20)
+                            lbox.Size = Vector2.new(300, 255)
+                            lbox.ZIndex = 15
+                            lbox.draggable = true
+
+                            scbox.Position = lbox.Position + Vector2.new(5, 25)
+                            scbox.Size = Vector2.new(290, 225)
+                            scbox.ZIndex = 16
+                            scbox.parent = lbox
+
+                            title.Visible = true
+                            title.Size = 18
+                            title.ZIndex = 16
+                            title.Outline = true
+                            title.Font = Drawing.Fonts.Monospace
+                            title.Color = Color3.new(1, 1, 1)
+                            title.Position = lbox.Position + Vector2.new(3)
+                            title.Text = bname
+                            title.parent = lbox
+                            title.name = "title"
+
+                            tb.Position = title.Position + Vector2.new(title.TextBounds.X + 5, 4)
+                            tb.Size = Vector2.new(lbox.Size.X - 7 - (title.TextBounds.X + 5), 11)
+                            tb.Color = Color3.new(.1, .1, .1)
+                            tb.ZIndex = 17
+                            tb.parent = lbox
+                            tb.name = "tb"
+                            tb.Visible = true
+
+                            tbtext.ZIndex = 3
+                            tbtext.Visible = true
+                            tbtext.Outline = true
+                            tbtext.Color = Color3.new(.7, .7, .7)
+                            tbtext.Size = 16
+                            tbtext.Font = Drawing.Fonts.Monospace
+                            tbtext.Text = "Find"
+                            tbtext.Position = tb.Position + Vector2.new(2, -2)
+                            tbtext.parent = tb
+                            tbtext.ZIndex = 18
+                            tbtext.name = "search"
+
+                            tcon = sv.UserInputService.InputBegan:Connect(function(c, _)
+                                if _ then return end
+
+                                if c.UserInputType == Enum.UserInputType.MouseButton1 and IsInFrame(tb, GetMousePosition()) then
+                                    local ltb = Instance.new("TextBox", sv.CoreGui)
+                                    ltb:CaptureFocus()
+                                    tbtext.Text = ""
+                                    tbtext.Color = lib.AccentColor
+                                    local lcon = ltb.Changed:Connect(function()
+                                        tbtext.Text = ltb.Text
+                                        if tbtext.Text == "Find" then return end
+                                        local ci = 0
+
+                                        for _,v in next, scbox:children() do
+                                            if type(v.Size) ~= "number" then continue end
+                                            text = tostring(v.Text):lower()
+
+                                            if text:find("^"..ltb.Text:lower()) or ltb.Text == "" then
+                                                ci += 1
+                                                v.Visible = ci < 12
+                                                local newpos = scbox.Position + Vector2.new(5, 5 + (ci - 1) * 20)
+
+                                                for __, v2 in v:children(true) do
+                                                    v2.Visible = ci < 12
+
+                                                    v2.Position = v2.name == "s" and newpos - Vector2.new(1, 1) or newpos
+                                                end
+
+                                                v.Position = newpos + Vector2.new(2)
+                                            else
+                                                v.Visible = false
+
+                                                for __, v2 in v:children(true) do
+                                                    v2.Visible = false
+                                                end
+                                            end
+                                        end
+                                    end)
+
+                                    ltb.FocusLost:Once(function()
+                                        lcon:Disconnect()
+                                        tbtext.Color = Color3.new(.7, .7, .7)
+                                        if ltb.Text == "" then
+                                            tbtext.Text = "Find"
+                                        end
+                                    end)
+                                end
+                            end)
+
+                            table.insert(cons, tcon)
+                            Box(lbox, 15, true)
+                            Box(scbox, 16, true)
+                            Box(tb, 17)
+                            Scrolling(scbox, {
+                                scrollamount = 20,
+                                paddingbottom = 2
+                            })
+
+                            for sebhrgjwesbnrighbewshkrgbewshkrgbeshkrf,v in next, list do
+                                local option = GetGradientBox(sebhrgjwesbnrighbewshkrgbewshkrgbeshkrf < 12)
+                                local ot = Draw "Text"
+                                local pos = scbox.Position + Vector2.new(5, 5 + (sebhrgjwesbnrighbewshkrgbewshkrgbeshkrf - 1) * 20)
+
+                                ot.Visible = sebhrgjwesbnrighbewshkrgbewshkrgbeshkrf < 12
+                                ot.Size = 15
+                                ot.ZIndex = 18
+                                ot.Outline = true
+                                ot.Font = Drawing.Fonts.Monospace
+                                ot.Color = Color3.new(1, 1, 1)
+                                ot.Position = pos + Vector2.new(2)
+                                ot.Text = tostring(v)
+                                ot.parent = scbox
+                                ot.name = tostring(v)
+
+                                option.parent = ot
+                                option.name = tostring(v)
+                                option.Size = Vector2.new(280, 15)
+                                option.Position = pos
+                                option.ZIndex = 17
+
+                                Box(option, 17).s.Visible = sebhrgjwesbnrighbewshkrgbewshkrgbeshkrf < 12
+
+                                local con = sv.UserInputService.InputBegan:Connect(function(a, _)
+                                    if _ then return end
+
+                                    if a.UserInputType == Enum.UserInputType.MouseButton1 and option.Visible and option.Transparency ~= 0 and IsInFrame(option, GetMousePosition()) then
+                                        callback(v)
+                                    end
+                                end)
+
+                                table.insert(cons, con)
+                            end
                         end
                     end
                 end))
@@ -1759,10 +1818,10 @@ function lib:new(libname, logodata)
                             title.Visible = true
                             title.Outline = true
                             title.Color = Color3.new(1,1,1)
-                            title.Size = 16
+                            title.Size = 18
                             title.Font = Drawing.Fonts.Monospace
                             title.Text = bname
-                            title.Position = colorbox.Position + Vector2.new(10, 2)
+                            title.Position = colorbox.Position + Vector2.new(7, 2)
                             title.parent = colorbox
                             title.name = "title"
 
@@ -2355,16 +2414,16 @@ function lib:new(libname, logodata)
 end
 
 if isv2 then
-    lib:note("This ui is not meant support syn v2", {
+    lib:note("This ui is not meant to support syn v2", {
         Error = true,
         Time = 10,
     })
 end
 
-return lib
+return lib, {["GetGradientBox"] = GetGradientBox, ["Draw"] = Draw, ["Scrolling"] = Scrolling, ["GetTextSize"] = GetTextSize, ["DeltaIter"] = DeltaIter, ["Ease"] = Ease, ["IsInFrame"] = IsInFrame, ["IsInCircle"] = IsInCircle}
 
 --[==[
-
+	-- local lib = syn.request({Url = "https://raw.githubusercontent.com/GFXTI/ProfessionalGeneration/main/Library.lua"}).Body
     local binds = lib:bindlist()
     local bind = binds:add("Bind down", Enum.KeyCode.X, true, print)
     binds:add("Bind hold", Enum.KeyCode.Z, false, print)
@@ -2388,7 +2447,6 @@ return lib
         Time = 2
     })
 
-
     local j = lib:new("Professional Generation", syn.request({Url = "https://cdn.discordapp.com/attachments/907173542972502072/1081826251758653540/1f602.png"}).Body) -- make library -> table (2nd arg is optional for a logo)
     local b = j:tab"Main tab" -- new tab with name -> table
     local t = b:side "side tab" -- new side tab with name -> table
@@ -2399,7 +2457,11 @@ return lib
     t:toggle("toggle false", false, print) -- name, default, callback -> boolean
     t:slider("slider", 0, 100, 50, true, print) -- name, minimum, maximum, default, precise, callback -> number
     t:bind("bind", Enum.KeyCode.LeftShift, print) -- name, default, callback -> EnumItem
-    t:list("list", table.create(10, "nigger"), print) -- name, list, callback -> any
+    t:list("list", {
+        "Whos",
+        "in",
+        "paris?"
+    }, print) -- name, list, callback -> any
     t:colorpicker('colorpicker', lib.AccentColor, function(color) -- name, default, callback -> Color3
         j:accent(color)
     end)
@@ -2408,7 +2470,7 @@ return lib
     b:side "stab2":toggle("ninjas", true, print)
     j:tab"MONEY HACK"
 
-    task.wait(10)
+    task.wait(30)
     table.foreach(cons, function(_, v) -- Disconnecting all of these kills the library
         v:Disconnect()
     end)
