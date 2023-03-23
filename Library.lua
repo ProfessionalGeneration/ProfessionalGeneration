@@ -17,7 +17,7 @@ local DeltaIter, Lerp
 local notes = {}
 local cons = {}
 local accents = {}
-local shortendbinds = {["MouseButton1"] = "MB1", ["MouseButton2"] = "MB2", ["MouseButton3"] = "MB3", ["PageUp"] = "PUp", ["PageDown"] = "PDn", ["Home"] = "Hm", ["Delete"] = "Del", ["Insert"] = "Ins", ["LeftAlt"] = "LAlt", ["LeftControl"] = "LC", ["LeftShift"] = "LS", ["RightAlt"] = "RAlt", ["RightControl"] = "RC", ["RightShift"] = "RS", ["CapsLock"] = "Caps"} -- https://github.com/dotowasbaking/fricklib/blob/main/main.lua (i rly didnt wanna make any of this)
+local shortendbinds = {["MouseButton1"] = "MB1", ["MouseButton2"] = "MB2", ["MouseButton3"] = "MB3", ["PageUp"] = "PUp", ["PageDown"] = "PDn", ["Home"] = "Hm", ["Delete"] = "Del", ["Insert"] = "Ins", ["LeftAlt"] = "LAlt", ["LeftControl"] = "LC", ["LeftShift"] = "LS", ["RightAlt"] = "RAlt", ["RightControl"] = "RC", ["RightShift"] = "RS", ["CapsLock"] = "Caps", ["SemiColon"] = ";"} -- https://github.com/dotowasbaking/fricklib/blob/main/main.lua (i rly didnt wanna make any of this)
 local sv = setmetatable({}, {__index = function(_, a)
     return game:GetService(a)
 end})
@@ -782,7 +782,7 @@ function lib:bindlist()
 
         function bind:remove()
             table.remove(bts, table.find(bts, bt))
-            bt.obj:Destroy()
+            bt.obj:Remove()
             for i,v in next, bts do
                 v.Position -= Vector2.new(0, 20)
             end
@@ -824,7 +824,7 @@ function lib:togglelist()
     end
 
     function togs:remove(name)
-        objs[name].obj:Destroy()
+        objs[name].obj:Remove()
 
         for i,v in next, objs do
             v.Position += Vector2.new(0, 26)
@@ -834,13 +834,14 @@ function lib:togglelist()
     return togs
 end
 
---[[function lib:commandbar() -- i dont wanna fuckin make this rn
+function lib:commandbar() -- i dont wanna fuckin make this rn
     local cbar = {
         FocusKey = Enum.KeyCode.Semicolon,
         cmds = {
             {
                 name = "print",
-                aliases = "p",
+                aliases = {"p"},
+                info = "prints thing",
                 func = function(...)
                     print(...)
                 end
@@ -856,6 +857,8 @@ end
     local tb = GetGradientBox(true)
     local tbtext = Draw "Text"
     local cb = Instance.new("TextBox", sv.CoreGui) -- uea i dont feel like making my own fucking keyboard handler
+    local listcons, ops, list, output = {}
+
     box.Size = Vector2.new(241, 25)
     box.Position = Vector2.new(30, cams.Y - 60)
     box.draggable = true
@@ -905,6 +908,7 @@ end
         table.insert(cons, tcon)
         cb.FocusLost:Wait()
         tcon:Disconnect()
+        task.spawn(cbar.handle, tbtext.Text)
         tbtext.Text = ("%s to focus"):format(shortendbinds[tostring(cbar.FocusKey):sub(14)] or tostring(cbar.FocusKey):sub(14))
         tbtext.Color = Color3.new(.7, .7, .7)
     end))
@@ -926,27 +930,310 @@ end
             end
 
             if IsInFrame(listbb, GetMousePosition()) then
-                local list = GetGradientBox(true)
-                local title = Draw "Text"
+                if list then
+                    list.obj:Remove()
 
-                list.Size = Vector2.new(241, 400)
-                list.Position = box.Position - Vector2.new(0, 410)
+                    for i,v in next, list:children(true) do
+                        v.obj:Remove()
+                    end
+
+                    table.foreach(listcons, function(_, v)
+                        v:Disconnect()
+                    end)
+
+                    list = nil
+
+                    return
+                end
+
+                list = GetGradientBox(true)
+                list.Size = Vector2.new(241, 405)
+                list.Position = box.Position - Vector2.new(0, 415)
                 list.ZIndex = 4
                 list.draggable = true
 
-                title.ZIndex = 1
-                title.Visible = true
-                title.Outline = true
-                title.Color = Color3.new(1,1,1)
-                title.Size = 18
-                title.Font = Drawing.Fonts.Monospace
-                title.Text = "Settings  |  Commands"
-                title.Position = list.Position + Vector2.new(20, 1)
-                title.parent = tb
-                title.ZIndex = 5
+                do
+                    local sbox = GetGradientBox(true)
+                    local title = Draw "Text"
 
-                for i,v in cbar.cmds do
-                    
+                    sbox.Position = list.Position + Vector2.new(5, 10)
+                    sbox.Size = Vector2.new(231, 43)
+                    sbox.ZIndex = 5
+                    sbox.parent = list
+
+                    title.Visible = true
+                    title.Outline = true
+                    title.Color = Color3.new(1,1,1)
+                    title.Size = 16
+                    title.Font = Drawing.Fonts.Monospace
+                    title.Text = "Settings"
+                    title.Position = sbox.Position + Vector2.new(2)
+                    title.parent = sbox
+                    title.ZIndex = 6
+
+                    do
+                        local opbox = GetGradientBox(true)
+
+                        opbox.Position = sbox.Position + Vector2.new(sbox.Size.X - 19, 4)
+                        opbox.Size = Vector2.new(11, 11)
+                        opbox.parent = sbox
+                        opbox.Color = Color3.new(.1, .1, .1)
+                        opbox.ZIndex = 6
+
+                        Box(opbox, 6)
+
+                        do
+                            local con = sv.UserInputService.InputBegan:Connect(function(a, b)
+                                if b then return end
+
+                                if output then
+                                    output.obj:Remove()
+
+                                    for i,v in next, output:children(true) do
+                                        v.obj:Remove()
+                                    end
+
+                                    output = nil
+
+                                    return
+                                end
+
+                                if a.UserInputType == Enum.UserInputType.MouseButton1 and IsInFrame(opbox, GetMousePosition()) then
+                                    output = GetGradientBox(true)
+                                    local scbox = GetGradientBox(true)
+                                    local outtitle = Draw "Text"
+
+                                    output.Position = list.Position + Vector2.new(249)
+                                    output.Size = Vector2.new(200, 200)
+                                    output.ZIndex = 1
+                                    output.draggable = true
+
+                                    scbox.Position = output.Position + Vector2.new(5, 25)
+                                    scbox.Size = Vector2.new(190, 170)
+                                    scbox.ZIndex = 2
+                                    scbox.parent = output
+
+                                    outtitle.Visible = true
+                                    outtitle.Outline = true
+                                    outtitle.Color = Color3.new(1,1,1)
+                                    outtitle.Size = 16
+                                    outtitle.Font = Drawing.Fonts.Monospace
+                                    outtitle.Text = "Output"
+                                    outtitle.Position = output.Position + Vector2.new(2)
+                                    outtitle.parent = output
+                                    outtitle.ZIndex = 2
+
+                                    Box(output, 1, true)
+                                    Box(scbox, 2, true)
+                                    Scrolling(scbox, {
+                                        scrollamount = 20,
+                                        paddingbottom = 2
+                                    })
+
+                                    for i,v in next, ops do
+                                        
+                                    end
+
+                                    setmetatable(ops, {
+                                        __newindex = function(t, k, v)
+                                            rawset(t, k, v)
+                                        end
+                                    })
+                                end
+                            end)
+
+                            table.insert(cons, con)
+                            table.insert(listcons, con)
+                        end
+                    end
+
+                    do
+                        local focusbox = GetGradientBox(true)
+                        local key, keybox = GetGradientBox(true)
+                        local fbt, ftb = Draw "Text", Draw "Text"
+                        local is
+
+                        focusbox.Position = sbox.Position + Vector2.new(5, 20)
+                        focusbox.Size = Vector2.new(221, 18)
+                        focusbox.ZIndex = 7
+                        focusbox.parent = sbox
+
+                        fbt.Visible = true
+                        fbt.Outline = true
+                        fbt.Color = Color3.new(1,1,1)
+                        fbt.Size = 16
+                        fbt.Font = Drawing.Fonts.Monospace
+                        fbt.Text = "Focus key"
+                        fbt.Position = focusbox.Position + Vector2.new(2)
+                        fbt.parent = focusbox
+                        fbt.ZIndex = 8
+
+                        key.Position = focusbox.Position + Vector2.new(focusbox.Size.X - 17, 3)
+                        key.Size = Vector2.new(12, 12)
+                        key.ZIndex = 8
+                        key.Color = Color3.new(.1, .1, .1)
+                        key.parent = focusbox
+
+                        ftb.Visible = true
+                        ftb.Outline = true
+                        ftb.Color = Color3.new(1,1,1)
+                        ftb.Size = 16
+                        ftb.Font = Drawing.Fonts.Monospace
+                        ftb.Text = ";"
+                        ftb.Position = key.Position - Vector2.new(2, 2)
+                        ftb.parent = key
+                        ftb.ZIndex = 9
+
+                        local function Update(new)
+                            local ts = GetTextSize(new, 16, Drawing.Fonts.Monospace).X
+                            local ep = focusbox.Position.X + focusbox.Size.X - 9 - ts
+
+                            ftb.Position = Vector2.new(ep, focusbox.Position.Y + 3) + Vector2.new(2, -2)
+                            key.Size = Vector2.new(ts + 6, 12)
+                            key.Position = Vector2.new(ep, focusbox.Position.Y + 3)
+                            keybox.s.Position = key.Position - Vector2.new(1, 1)
+                            keybox.s.Size = key.Size + Vector2.new(1, 1)
+                            ftb.Text = new
+                        end
+
+                        do
+                            local con = sv.UserInputService.InputBegan:Connect(function(a, b)
+                                if b then return end
+
+                                if a.UserInputType == Enum.UserInputType.MouseButton1 and focusbox.Visible and focusbox.Transparency ~= 0 and not is then
+                                    if IsInFrame(focusbox, GetMousePosition()) then
+                                        Update("...")
+                                        is = true
+                                    end
+                                end
+                            end)
+
+                            table.insert(cons, con)
+                            table.insert(listcons, con)
+                        end
+
+                        do
+                            local con = sv.UserInputService.InputBegan:Connect(function(a, b)
+                                if b then return end
+
+                                if a.KeyCode ~= Enum.KeyCode.Unknown and is then
+                                    Update(shortendbinds[tostring(a.KeyCode):sub(14)] or tostring(a.KeyCode):sub(14))
+                                    cbar.FocusKey = a.KeyCode
+                                    is = false
+                                end
+                            end)
+
+                            table.insert(cons, con)
+                            table.insert(listcons, con)
+                        end
+
+                        Box(focusbox, 7)
+                        keybox = Box(key, 8)
+                    end
+
+                    Box(sbox, 5, true)
+                end
+
+                do
+                    local cbox = GetGradientBox(true)
+                    local sbox = GetGradientBox(true)
+                    local title = Draw "Text"
+
+                    cbox.Position = list.Position + Vector2.new(5, 65)
+                    cbox.Size = Vector2.new(231, 335)
+                    cbox.parent = list
+                    cbox.ZIndex = 5
+
+                    sbox.Position = cbox.Position + Vector2.new(5, 25)
+                    sbox.Size = Vector2.new(221, 305)
+                    sbox.parent = cbox
+                    sbox.ZIndex = 6
+
+                    title.Visible = true
+                    title.Outline = true
+                    title.Color = Color3.new(1,1,1)
+                    title.Size = 16
+                    title.Font = Drawing.Fonts.Monospace
+                    title.Text = "Commands"
+                    title.Position = cbox.Position + Vector2.new(2)
+                    title.parent = cbox
+                    title.ZIndex = 6
+
+                    Box(cbox, 5, true)
+                    Box(sbox, 6, true)
+                    Scrolling(sbox, {
+                        scrollamount = 20,
+                        paddingbottom = 2
+                    })
+
+                    for i,v in cbar.cmds do
+                        local cmdbox = GetGradientBox(i < 16)
+                        local cmdtxt = Draw "Text"
+
+                        cmdbox.Position = sbox.Position + Vector2.new(5, ((i - 1) * 20) + 5)
+                        cmdbox.Size = Vector2.new(211, 15)
+                        cmdbox.ZIndex = 7
+                        cmdbox.parent = sbox
+                        cmdbox.name = v.name
+                        -- basically attributes
+                        cmdbox.infotext = ("%s "..(v.aliases and "[%s]" or "").."\n%s"):format(v.name, v.aliases and table.concat(v.aliases, ",") or v.info, v.info)
+                        cmdbox.itsize = GetTextSize(cmdbox.infotext, 16, Drawing.Fonts.Monospace) + Vector2.new(4, 4)
+
+                        cmdtxt.Visible = i < 16
+                        cmdtxt.Outline = true
+                        cmdtxt.Color = Color3.new(1,1,1)
+                        cmdtxt.Size = 16
+                        cmdtxt.Font = Drawing.Fonts.Monospace
+                        cmdtxt.Text = v.name
+                        cmdtxt.Position = cmdbox.Position + Vector2.new(2, -1)
+                        cmdtxt.parent = cmdbox
+                        cmdtxt.ZIndex = 8
+
+                        Box(cmdbox, 7).s.Visible = i < 16
+                    end
+
+                    do
+                        local ibox = GetGradientBox(false)
+                        local ibtxt = Draw "Text"
+                        ibtxt.Visible = true
+                        ibtxt.Outline = true
+                        ibtxt.Color = Color3.new(1,1,1)
+                        ibtxt.Size = 16
+                        ibtxt.Font = Drawing.Fonts.Monospace
+                        ibtxt.parent = ibtxt
+                        ibtxt.ZIndex = 11
+                        ibox.ZIndex = 10
+                        ibox.s = Box(ibox, 10).s
+
+                        local con = sv.UserInputService.InputChanged:Connect(function(a)
+                            if a.UserInputType == Enum.UserInputType.MouseMovement then
+                                for i,v in next, sbox:children() do
+                                    local pos = GetMousePosition()
+
+                                    if v.itsize and IsInFrame(v, pos) and v.Visible then
+                                        ibox.Visible = true
+                                        ibox.s.Visible = true
+                                        ibtxt.Visible = true
+                                        ibox.Position = pos - v.itsize
+                                        ibox.Size = v.itsize
+                                        ibox.s.Size = v.itsize + Vector2.one
+                                        ibox.s.Position = pos - v.itsize
+                                        ibtxt.Position = pos - v.itsize + Vector2.new(2, 2)
+                                        ibtxt.Text = v.infotext
+
+                                        return
+                                    end
+                                end
+
+                                ibox.Visible = false
+                                ibox.s.Visible = false
+                                ibtxt.Visible = false
+                            end
+                        end)
+
+                        table.insert(cons, con)
+                        table.insert(listcons, con)
+                    end
                 end
 
                 Box(list, 4, true)
@@ -954,16 +1241,51 @@ end
         end
     end))
 
-    function cbar:remove()
+    function cbar:destroy()
         for i,v in box:children(true) do
-            v.obj:Destroy()
+            v.obj:Remove()
         end
 
-        cb:Destroy()
+        cb:Remove()
+    end
+
+    function cbar:handle(msg)
+        for i,v in next, cbar.cmds do
+            local args = msg:split(" ")
+            local cmd = args[1]
+            table.remove(args, 1)
+
+            if v.name:lower() == cmd:lower() then
+                return select(2, pcall(v.func, unpack(args)))
+            end
+
+            for i2, v2 in next, v.aliases do
+                if v2:lower() == cmd:lower() then
+                    return select(2, pcall(v.func, unpack(args)))
+                end
+            end
+        end
+    end
+
+    function cbar:add(name, aliases, info, func)
+        table.insert(cbar.cmds, {
+            name = name,
+            aliases = type(aliases) == "table" and aliases or type(aliases) == "string" and {aliases} or {},
+            info = info or "No information provided",
+            func = func or function() end
+        })
+    end
+
+    function cbar:remove(name)
+        for i,v in next, cbar.cmds do
+            if v.name == name then
+                table.remove(cbar.cmds, i)
+            end
+        end
     end
 
     return cbar
-end]]
+end
 
 function lib:new(libname, logodata)
     local oldop = {}
@@ -1556,10 +1878,10 @@ function lib:new(libname, logodata)
                     if a.UserInputType == Enum.UserInputType.MouseButton1 and bbox.Visible and bbox.Transparency ~= 0 then
                         if IsInFrame(bbox, GetMousePosition()) then
                             if lbox then
-                                lbox.obj:Destroy()
+                                lbox.obj:Remove()
 
                                 table.foreach(lbox:children(true), function(_, v)
-                                    v.obj:Destroy()
+                                    v.obj:Remove()
                                 end)
 
                                 lbox = nil
@@ -1950,7 +2272,7 @@ function lib:new(libname, logodata)
                                         pH, pY, pX = rgb:ToHSV()
                                         shdbox.s.Position = hdbox.Position - Vector2.one
                                         pcall(callback, rgb)
-                                        cb:Destroy()
+                                        cb:Remove()
 
                                         return
                                     end
@@ -1976,7 +2298,7 @@ function lib:new(libname, logodata)
                                         hdbox.Position = Vector2.new(hbox.Position.X - 1, Lerp(hbox.Position.Y, hbox.Position.Y + hbox.Size.Y, select(1, rgb:ToHSV())))
                                         shdbox.s.Position = hdbox.Position - Vector2.one
                                         pcall(callback, rgb)
-                                        cb:Destroy()
+                                        cb:Remove()
 
                                         return
                                     end
@@ -2109,7 +2431,7 @@ function lib:new(libname, logodata)
                             tbtext.Color = Color3.new(.7, .7, .7)
 
                             pcall(callback, cb.Text)
-                            cb:Destroy()
+                            cb:Remove()
                         end
                     end
                 end))
@@ -2421,6 +2743,10 @@ if isv2 then
     })
 end
 
+task.delay(15, table.foreach, cons, function(_, v) -- Disconnecting all of these kills the library
+    v:Disconnect()
+end)
+
 return lib, {["GetGradientBox"] = GetGradientBox, ["Draw"] = Draw, ["Scrolling"] = Scrolling, ["GetTextSize"] = GetTextSize, ["DeltaIter"] = DeltaIter, ["Ease"] = Ease, ["IsInFrame"] = IsInFrame, ["IsInCircle"] = IsInCircle}
 
 --[==[
@@ -2473,7 +2799,4 @@ return lib, {["GetGradientBox"] = GetGradientBox, ["Draw"] = Draw, ["Scrolling"]
     j:tab"MONEY HACK"
 
     task.wait(30)
-    table.foreach(cons, function(_, v) -- Disconnecting all of these kills the library
-        v:Disconnect()
-    end)
 ]==]
