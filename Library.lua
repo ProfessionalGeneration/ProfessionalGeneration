@@ -1432,6 +1432,7 @@ function lib:new(libname, logodata)
         par.parent = box
         par.name = name
         par.ZIndex = 2
+        
         table.foreach(Box(par, 2, true), function(_, v)
             v.Visible = true
             v.Transparency = i == 1 and 1 or 0
@@ -1509,7 +1510,7 @@ function lib:new(libname, logodata)
 
                         otab.Transparency = 1
                         for _, v in next, otab:children(true) do
-                            v.Transparency = ops[v] or 1
+                            v.Transparency = ops[v] or v.op or 1
                         end
                     end
                 end
@@ -1669,8 +1670,8 @@ function lib:new(libname, logodata)
                 tb.Filled = true
                 tb.parent = bbox
                 tb.name = "tb"
-                tb.Transparency = default and si == 1 and i == 1 and 1 or 0
-                tb.op = default and si == 1 and i == 1 and 1 or 0
+                tb.Transparency = (default and si == 1 and i == 1) and 1 or 0
+                tb.op = default and 1 or 0
 
                 table.foreach(Box(tb, 3), function(_,v)
                     v.Visible = buttons < 13
@@ -1698,6 +1699,7 @@ function lib:new(libname, logodata)
                                     tb.Transparency = inc
                                 end)
                             end)
+
                             pcall(callback, default)
                         end
                     end
@@ -2779,28 +2781,29 @@ end
 
 --[==[
     local cbar = lib:commandbar()
-    cbar:add("print", {"p"}, "prints stuff to output", function(...)
+    cbar:add("print", {"p"}, "prints stuff to output", function(...) -- name, aliases, info, callback
         return table.concat({...}, " ")
     end)
     cbar:add("toremove")
-    cbar:handle("print stuff")
+    cbar:handle("print stuff") -- handles command given
 
-    local binds = lib:bindlist()
-    local bind = binds:add("Bind down", Enum.KeyCode.X, true, print)
+    local binds = lib:bindlist() -- -> table
+    local bind = binds:add("Bind down", Enum.KeyCode.X, true, print) -- name, default, toggle, callback (returns enabled) -> table
     binds:add("Bind hold", Enum.KeyCode.Z, false, print)
 
-    local loader = lib:loader("Professional Generation")
-    loader:set "Loading roblox hack"
+    local loader = lib:loader "Professional Generation" -- name -> table
+    loader:set "Loading user interface" -- subtitle
 
-    lib:note("Question (answer else lib doesnt unload)", {
+    lib:note("Question (answer else lib doesnt unload)", { -- Yields until answered
         Question = true,
         Options = {
             "Yes",
-            "Yes2"
+            "No"
         },
         Time = 9
     })
-    lib:note("ERROR! BALCK PEROSN", {
+
+    lib:note("Error message", {
         Error = true,
         Time = 5
     })
@@ -2808,29 +2811,35 @@ end
         Time = 2
     })
 
-    local j, libfuncs = loadstring(syn.request({Url = "https://raw.githubusercontent.com/GFXTI/ProfessionalGeneration/main/Library.lua"}).Body)()
+    local library, libfuncs = loadstring(syn.request({Url = "https://raw.githubusercontent.com/GFXTI/ProfessionalGeneration/main/Library.lua"}).Body)()
+    local j = library:new("Professional Generation", syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/pglogo.png?raw=true"}).Body)
     --local j = lib:new("Professional Generation", syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/pglogo.png?raw=true"}).Body) -- make library -> table (2nd arg is optional for a logo)
-    j:tab"MONEY HACK":side "its over":button("one piece", print)
-    local b = j:tab"Main tab" -- new tab with name -> table
-    local t = b:side "side tab" -- new side tab with name -> table
-    t:button("button", function() -- name, callback
-        print'a'
-    end)
-    t:toggle("toggle true", true, print) -- name, default, callback -> boolean
-    t:toggle("toggle false", false, print) -- name, default, callback -> boolean
-    t:slider("slider", 0, 100, 50, true, print) -- name, minimum, maximum, default, precise, callback -> number
-    t:bind("bind", Enum.KeyCode.LeftShift, print) -- name, default, callback -> EnumItem
-    t:list("list", {
-        "Whos",
-        "in",
-        "paris?"
-    }, print) -- name, list, callback -> any
-    t:colorpicker('colorpicker', lib.AccentColor, function(color) -- name, default, callback -> Color3
-        j:accent(color)
-    end)
-    t:textbox("textbox", "text", print) -- name, background text, callback -> string
-    t:angler("angler", 90, print) -- name, default angle, callback -> number (You need to manually convert it to an angle through math.rad)
-    b:side "stab2":toggle("ninjas", true, print)
+    local tab1 = j:tab "Tab1" -- new tab with name -> table
+    local side1 = tab1:side "Side1" -- new side tab with name -> table
+    local side2 = tab1:side "Side2"
+
+    side1:button("Button", print) -- name, callback
+
+    side1:toggle("Toggle on", true, print) -- name, default, callback -> boolean
+    side1:toggle("Toggle off", true, print)
+
+    side1:slider("Slider", 0, 100, 50, true, print) -- name, minimum, maximum, default, precise, callback -> number
+
+    side1:colorpicker("Color picker", Color3.new(0, 0, 1), print) -- name, default, callback -> Color3
+
+    side1:bind("Key bind", Enum.KeyCode.F, print) -- name, default, callback -> EnumItem
+
+    side1:list("List", {
+        "Option 1",
+        "Option 2",
+        "Option 3"
+    }, print)
+
+    side1:textbox("Text box", "Text", print) -- name, background text, callback -> string
+
+    side1:angler("Angler", 90, print) -- name, default angle, callback -> number
+
+    side2:button("Button", print)
 
     task.wait(15)
     loader:finish()
@@ -2838,11 +2847,11 @@ end
     cbar:remove("toremove")
     cbar:destroy()
 
-    task.wait(15)
+    task.wait(60)
 
     table.foreach(cons, function(_, v) -- kills everything
         v:Disconnect()
     end)
-]==]
+--]==]
 
 return lib, {["GetGradientBox"] = GetGradientBox, ["Draw"] = Draw, ["Scrolling"] = Scrolling, ["GetTextSize"] = GetTextSize, ["DeltaIter"] = DeltaIter, ["Ease"] = Ease, ["IsInFrame"] = IsInFrame, ["IsInCircle"] = IsInCircle}
