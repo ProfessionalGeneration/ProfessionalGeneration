@@ -4,9 +4,18 @@
 -- made this at school with absolutely NO debugging (quite the challenge aint it)
 -- ill mess with OOP in school cuz why not (and remake my "Draw" stuff to be a bit more useful)
 
+--[[ TODO:
+    Size & Position clamping
+    Tweening
+    More frame types
+    Finsih dragging
+    Finish scrolling
+]]
+
 local Dinstance = {} do
     local GradientData = syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/angryimg.png?raw=true"}).Body
     local DraggableFrames, ScrollableFrames = {}, {}
+    local mousepos = Vector2.zero
     local sv = {
         uis = cloneref(game:service "UserInputService"),
         core = cloneref(game:service "CoreGui"),
@@ -247,25 +256,56 @@ local Dinstance = {} do
 
     Dinstance.__index = Dinstance
 
-    sv.uis.InputBegan:Connect(function(input, ret) 
-        if ret then return end
+    sv.uis.InputChanged:Connect(function() 
+        mp = sv.uis:GetMouseLocation()
+    end)
 
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            for i,v in DraggableFrames do
-                if IsInFrame(v) and v.Opacity ~= 0 and v.Visible then
-                    local _continue
+    do
+        sv.uis.InputBegan:Connect(function(input, ret) 
+            if ret then return end
+            if input.UserInputType == Enum.UserInputType.MouseWheel then
+                local up = a.Position.Z > 0
 
-                    for _i, _v in v:children(true) do
-                        if (_v.Active and IsInFrame(_v) and _v.Opacity ~= 0 and _v.Visible) then
-                            _continue = true
-                            
-                            break
-                        end
+                for _,frame in ScrollableFrames do
+                    for i,v in frame:children() do
+                        
                     end
-
-                    if _continue then continue end
                 end
             end
-        end
-    end)
+        end)
+    end
+
+    do
+        local OldPos, Connection = Vector2.zero
+
+        sv.uis.InputBegan:Connect(function(input, ret) 
+            if ret then return end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                for i,v in DraggableFrames do
+                    if IsInFrame(v) and v.Opacity ~= 0 and v.Visible then
+                        local _continue
+
+                        for _i, _v in v:children(true) do
+                            if (_v.Active and IsInFrame(_v) and _v.Opacity ~= 0 and _v.Visible and _v.ZIndex > v.ZIndex) then
+                                _continue = true
+                                
+                                break
+                            end
+                        end
+
+                        if _continue then continue end
+
+                        local offset = GetActualPosition(v) - mp
+
+                        local Connection = sv.run.RenderStepped:Connect(function() 
+                            if OldPos == mp then return end
+                            OldPos = mp
+
+                            v.Position = mp - offset
+                        end)
+                    end
+                end
+            end
+        end)
+    end
 end
