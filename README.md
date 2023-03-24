@@ -1,4 +1,4 @@
-# ProfessionalGeneration
+# Professional Generation
 ## Professional Generators ✅
 
 This is a *"little"* personal project that i wanna do
