@@ -1501,7 +1501,7 @@ function lib:new(libname, logodata)
 
                     for _,v in next, library.tabs[name].sides do
                         firstframe = v.tab
-                        
+
                         break
                     end
 
@@ -1525,8 +1525,9 @@ function lib:new(libname, logodata)
                         end
 
                         otab.Transparency = 1
+                        
                         for _, v in next, otab:children(true) do
-                            v.Transparency = firstframe and v:isdescendantof(firstframe) and ops[v] or v.op or 1
+                            v.Transparency = ops[v] or v.op or 1
                         end
                     end
                 end
