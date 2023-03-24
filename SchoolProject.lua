@@ -268,7 +268,7 @@ local Dinstance = {} do
 
                 for _,frame in ScrollableFrames do
                     for i,v in frame:children() do
-                        
+                        v.Position += Vector2.new(0, 20 * (up and 1 or -1))
                     end
                 end
             end
