@@ -106,6 +106,14 @@ local Draw, funcs do
             end
         end
 
+        function tbl:isdescendantof(frame)
+            for i,v in frame:children(true) do
+                if v == tbl then
+                    return v
+                end
+            end
+        end
+
         return setmetatable(tbl, {
             __newindex = function(_, k, v)
                 if funcs.has(obj, k) then
@@ -1432,7 +1440,7 @@ function lib:new(libname, logodata)
         par.parent = box
         par.name = name
         par.ZIndex = 2
-        
+
         table.foreach(Box(par, 2, true), function(_, v)
             v.Visible = true
             v.Transparency = i == 1 and 1 or 0
@@ -1489,6 +1497,14 @@ function lib:new(libname, logodata)
                 if b then return end
 
                 if a.UserInputType == Enum.UserInputType.MouseButton1 then -- theres gotta be a better way to do this riiight?
+                    local firstframe
+
+                    for _,v in next, library.tabs[name].sides do
+                        firstframe = v.tab
+                        
+                        break
+                    end
+
                     if IsInFrame(cbox, GetMousePosition()) then
                         local otab = library.tabs[name].tab
                         local ops = library.tabs[name].ops
@@ -1510,7 +1526,7 @@ function lib:new(libname, logodata)
 
                         otab.Transparency = 1
                         for _, v in next, otab:children(true) do
-                            v.Transparency = ops[v] or v.op or 1
+                            v.Transparency = firstframe and v:isdescendantof(firstframe) and ops[v] or v.op or 1
                         end
                     end
                 end
@@ -1605,7 +1621,6 @@ function lib:new(libname, logodata)
                 bbox.parent = wbox
                 bbox.name = bname
                 bbox.Transparency = si == 1 and i == 1 and 1 or 0
-                bbox.op = si == 1 and 1 or 0
 
                 text.ZIndex = 3
                 text.Visible = buttons < 13
@@ -1619,7 +1634,6 @@ function lib:new(libname, logodata)
                 text.parent = bbox
                 text.name = "text"
                 text.Transparency = si == 1 and i == 1 and 1 or 0
-                text.op = si == 1 and 1 or 0
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = true
@@ -1651,7 +1665,6 @@ function lib:new(libname, logodata)
                 bbox.name = bname
                 bbox.parent = wbox
                 bbox.Transparency = si == 1 and i == 1 and 1 or 0
-                bbox.op = si == 1 and 1 or 0
 
                 text.ZIndex = 3
                 text.Visible = buttons < 13
@@ -1664,7 +1677,6 @@ function lib:new(libname, logodata)
                 text.parent = bbox
                 text.name = bname
                 text.Transparency = si == 1 and i == 1 and 1 or 0
-                text.op = si == 1 and 1 or 0
 
                 tb.Position = bbox.Position + bbox.Size - Vector2.new(20, 17)
                 tb.Size = Vector2.new(14, 14)
@@ -1675,18 +1687,16 @@ function lib:new(libname, logodata)
                 tb.parent = bbox
                 tb.name = "tb"
                 tb.Transparency = (default and si == 1 and i == 1) and 1 or 0
-                tb.op = default and si == 1 and 1 or 0 and 1 or 0
+                tb.op = default and 1 or 0
 
                 table.foreach(Box(tb, 3), function(_,v)
                     v.Visible = buttons < 13
                     v.Transparency = si == 1 and i == 1 and 1 or 0
-                    v.op = si == 1 and 1 or 0
                 end)
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = buttons < 13
                     v.Transparency = si == 1 and i == 1 and 1 or 0
-                    v.op = si == 1 and 1 or 0
                 end)
 
                 table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
@@ -1727,7 +1737,6 @@ function lib:new(libname, logodata)
                 bbox.name = bname
                 bbox.parent = wbox
                 bbox.Transparency = si == 1 and i == 1 and 1 or 0
-                bbox.op = si == 1 and 1 or 0
 
                 b2box.Position = bbox.Position
                 b2box.ZIndex = 3
@@ -1736,7 +1745,6 @@ function lib:new(libname, logodata)
                 b2box.parent = bbox
                 b2box.name = "b2box"
                 b2box.Transparency = si == 1 and i == 1 and 1 or 0
-                b2box.op = si == 1 and 1 or 0
 
                 text.ZIndex = 5
                 text.Visible = buttons < 13
@@ -1750,12 +1758,10 @@ function lib:new(libname, logodata)
                 text.parent = bbox
                 text.name = "text"
                 text.Transparency = si == 1 and i == 1 and 1 or 0
-                text.op = si == 1 and 1 or 0
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = buttons < 13
                     v.Transparency = si == 1 and i == 1 and 1 or 0
-                    v.op = si == 1 and 1 or 0
                 end)
 
                 table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
@@ -1813,7 +1819,6 @@ function lib:new(libname, logodata)
                 bbox.name = bname
                 bbox.parent = wbox
                 bbox.Transparency = si == 1 and i == 1 and 1 or 0
-                bbox.op = si == 1 and 1 or 0
 
                 text.ZIndex = 3
                 text.Visible = buttons < 13
@@ -1826,7 +1831,6 @@ function lib:new(libname, logodata)
                 text.parent = bbox
                 text.name = bname
                 text.Transparency = si == 1 and i == 1 and 1 or 0
-                text.op = si == 1 and 1 or 0
 
                 tb.Position = bbox.Position + bbox.Size - Vector2.new(20, 17)
                 tb.Size = Vector2.new(14, 14)
@@ -1835,7 +1839,6 @@ function lib:new(libname, logodata)
                 tb.parent = bbox
                 tb.name = "tb"
                 tb.Transparency = si == 1 and i == 1 and 1 or 0
-                tb.op = si == 1 and 1 or 0
 
                 key.ZIndex = 3
                 key.Visible = buttons < 13
@@ -1848,19 +1851,16 @@ function lib:new(libname, logodata)
                 key.parent = bbox
                 key.name = "key"
                 key.Transparency = si == 1 and i == 1 and 1 or 0
-                key.op = si == 1 and 1 or 0
 
                 keybox = Box(tb, 3)
                 table.foreach(keybox, function(_,v)
                     v.Visible = buttons < 13
                     v.Transparency = si == 1 and i == 1 and 1 or 0
-                    v.op = si == 1 and 1 or 0
                 end)
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = buttons < 13
                     v.Transparency = si == 1 and i == 1 and 1 or 0
-                    v.op = si == 1 and 1 or 0
                 end)
 
                 table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
@@ -1905,7 +1905,6 @@ function lib:new(libname, logodata)
                 bbox.parent = wbox
                 bbox.name = bname
                 bbox.Transparency = si == 1 and i == 1 and 1 or 0
-                bbox.op = si == 1 and 1 or 0
 
                 text.ZIndex = 3
                 text.Visible = buttons < 13
@@ -1919,12 +1918,10 @@ function lib:new(libname, logodata)
                 text.parent = bbox
                 text.name = bname
                 text.Transparency = si == 1 and i == 1 and 1 or 0
-                text.op = si == 1 and 1 or 0
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = true
                     v.Transparency = si == 1 and i == 1 and 1 or 0
-                    v.op = si == 1 and 1 or 0
                 end)
 
                 table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
@@ -2103,7 +2100,6 @@ function lib:new(libname, logodata)
                 bbox.name = bname
                 bbox.parent = wbox
                 bbox.Transparency = si == 1 and i == 1 and 1 or 0
-                bbox.op = si == 1 and 1 or 0
 
                 text.ZIndex = 3
                 text.Visible = buttons < 13
@@ -2116,7 +2112,6 @@ function lib:new(libname, logodata)
                 text.parent = bbox
                 text.name = bname
                 text.Transparency = si == 1 and i == 1 and 1 or 0
-                text.op = si == 1 and 1 or 0
 
                 tb.Position = bbox.Position + bbox.Size - Vector2.new(20, 17)
                 tb.Size = Vector2.new(14, 14)
@@ -2127,18 +2122,15 @@ function lib:new(libname, logodata)
                 tb.parent = bbox
                 tb.name = "tb"
                 tb.Transparency = si == 1 and i == 1 and 1 or 0
-                tb.op = si == 1 and 1 or 0
 
                 table.foreach(Box(tb, 3), function(_,v)
                     v.Visible = buttons < 13
                     v.Transparency = si == 1 and i == 1 and 1 or 0
-                    v.op = si == 1 and 1 or 0
                 end)
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = buttons < 13
                     v.Transparency = si == 1 and i == 1 and 1 or 0
-                    v.op = si == 1 and 1 or 0
                 end)
 
                 do
@@ -2429,7 +2421,6 @@ function lib:new(libname, logodata)
                 bbox.name = bname
                 bbox.parent = wbox
                 bbox.Transparency = si == 1 and i == 1 and 1 or 0
-                bbox.op = si == 1 and 1 or 0
 
                 text.ZIndex = 3
                 text.Visible = buttons < 13
@@ -2442,7 +2433,6 @@ function lib:new(libname, logodata)
                 text.parent = bbox
                 text.name = bname
                 text.Transparency = si == 1 and i == 1 and 1 or 0
-                text.op = si == 1 and 1 or 0
 
                 tb.Position = text.Position + Vector2.new(text.TextBounds.X + 10, 3)
                 tb.Size = Vector2.new(bbox.Size.X - 9 - (text.TextBounds.X + 10), 14)
@@ -2451,7 +2441,6 @@ function lib:new(libname, logodata)
                 tb.parent = bbox
                 tb.name = "tb"
                 tb.Transparency = si == 1 and i == 1 and 1 or 0
-                tb.op = si == 1 and 1 or 0
 
                 tbtext.ZIndex = 3
                 tbtext.Visible = buttons < 13
@@ -2464,18 +2453,15 @@ function lib:new(libname, logodata)
                 tbtext.parent = tb
                 tbtext.name = backtext
                 tbtext.Transparency = si == 1 and i == 1 and 1 or 0
-                tbtext.op = si == 1 and 1 or 0
 
                 table.foreach(Box(tb, 3), function(_,v)
                     v.Visible = buttons < 13
                     v.Transparency = si == 1 and i == 1 and 1 or 0
-                    v.op = si == 1 and 1 or 0
                 end)
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = buttons < 13
                     v.Transparency = si == 1 and i == 1 and 1 or 0
-                    v.op = si == 1 and 1 or 0
                 end)
 
                 table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
@@ -2531,7 +2517,6 @@ function lib:new(libname, logodata)
                 bbox.name = bname
                 bbox.parent = wbox
                 bbox.Transparency = si == 1 and i == 1 and 1 or 0
-                bbox.op = si == 1 and 1 or 0
 
                 text.ZIndex = 3
                 text.Visible = buttons < 13
@@ -2544,7 +2529,6 @@ function lib:new(libname, logodata)
                 text.parent = bbox
                 text.name = bname
                 text.Transparency = si == 1 and i == 1 and 1 or 0
-                text.op = si == 1 and 1 or 0
 
                 tb.Position = bbox.Position + bbox.Size - Vector2.new(20, 17)
                 tb.Size = Vector2.new(14, 14)
@@ -2553,7 +2537,6 @@ function lib:new(libname, logodata)
                 tb.parent = bbox
                 tb.name = "tb"
                 tb.Transparency = si == 1 and i == 1 and 1 or 0
-                tb.op = si == 1 and 1 or 0
 
                 angle.ZIndex = 3
                 angle.Visible = buttons < 13
@@ -2565,19 +2548,16 @@ function lib:new(libname, logodata)
                 angle.parent = bbox
                 angle.name = "key"
                 angle.Transparency = si == 1 and i == 1 and 1 or 0
-                angle.op = si == 1 and 1 or 0
 
                 anglebox = Box(tb, 3)
                 table.foreach(anglebox, function(_,v)
                     v.Visible = buttons < 13
                     v.Transparency = si == 1 and i == 1 and 1 or 0
-                    v.op = si == 1 and 1 or 0
                 end)
 
                 table.foreach(Box(bbox, 3), function(_,v)
                     v.Visible = buttons < 13
                     v.Transparency = si == 1 and i == 1 and 1 or 0
-                    v.op = si == 1 and 1 or 0
                 end)
 
                 do
