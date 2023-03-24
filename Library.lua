@@ -2780,6 +2780,10 @@ if isv2 then
 end
 
 --[==[
+    local lib, libfuncs = loadstring(syn.request({Url = "https://raw.githubusercontent.com/GFXTI/ProfessionalGeneration/main/Library.lua"}).Body)()
+    local j = lib:new("Professional Generation", syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/pglogo.png?raw=true"}).Body)
+    --local j = lib:new("Professional Generation", syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/pglogo.png?raw=true"}).Body) -- make library -> table (2nd arg is optional for a logo)
+
     local cbar = lib:commandbar()
     cbar:add("print", {"p"}, "prints stuff to output", function(...) -- name, aliases, info, callback
         return table.concat({...}, " ")
@@ -2800,20 +2804,17 @@ end
             "Yes",
             "No"
         },
-        Time = 9
+        Time = 25
     })
 
     lib:note("Error message", {
         Error = true,
-        Time = 5
+        Time = 25
     })
     lib:note("Professional Generation", {
-        Time = 2
+        Time = 25
     })
 
-    local library, libfuncs = loadstring(syn.request({Url = "https://raw.githubusercontent.com/GFXTI/ProfessionalGeneration/main/Library.lua"}).Body)()
-    local j = library:new("Professional Generation", syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/pglogo.png?raw=true"}).Body)
-    --local j = lib:new("Professional Generation", syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/pglogo.png?raw=true"}).Body) -- make library -> table (2nd arg is optional for a logo)
     local tab1 = j:tab "Tab1" -- new tab with name -> table
     local side1 = tab1:side "Side1" -- new side tab with name -> table
     local side2 = tab1:side "Side2"
