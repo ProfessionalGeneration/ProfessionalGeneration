@@ -307,6 +307,28 @@ local function Ease(x)
     return math.sin((x * math.pi) / 2)
 end
 
+local function TextWrapY(text, textsize, x)
+    local lines = {}
+    local cx = 0
+    local start = 1
+    local i = 1
+
+    text:gsub(".", function(v)
+        local size = GetTextSize(text, textsize, Drawing.Fonts.Monospace).X
+        i += 1
+
+        if size + cx < x then
+            cx += size
+        else
+            table.insert(lines, text:sub(start, i))
+            start = i + 1
+            cx = 0
+        end
+    end)
+
+    return table.concat(lines, "\n")
+end
+
 function DeltaIter(start, _end, mult, callback)
     local up
     local rstep = sv.RunService.RenderStepped
@@ -837,16 +859,7 @@ end
 function lib:commandbar() -- i dont wanna fuckin make this rn
     local cbar = {
         FocusKey = Enum.KeyCode.Semicolon,
-        cmds = {
-            {
-                name = "print",
-                aliases = {"p"},
-                info = "prints thing",
-                func = function(...)
-                    print(...)
-                end
-            }
-        }
+        cmds = {}
     }
     -- sdata here cuz ik people only gonna use the ui lib
     local sdata = syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/334-3349023_free-white-settings-icon-png-tool-icon-white.png?raw=true"}).Body
@@ -857,7 +870,7 @@ function lib:commandbar() -- i dont wanna fuckin make this rn
     local tb = GetGradientBox(true)
     local tbtext = Draw "Text"
     local cb = Instance.new("TextBox", sv.CoreGui) -- uea i dont feel like making my own fucking keyboard handler
-    local listcons, ops, list, output = {}
+    local listcons, ops, list, output = {}, {}
 
     box.Size = Vector2.new(241, 25)
     box.Position = Vector2.new(30, cams.Y - 60)
@@ -908,9 +921,9 @@ function lib:commandbar() -- i dont wanna fuckin make this rn
         table.insert(cons, tcon)
         cb.FocusLost:Wait()
         tcon:Disconnect()
-        task.spawn(cbar.handle, tbtext.Text)
         tbtext.Text = ("%s to focus"):format(shortendbinds[tostring(cbar.FocusKey):sub(14)] or tostring(cbar.FocusKey):sub(14))
         tbtext.Color = Color3.new(.7, .7, .7)
+        ops[#ops+1] = cbar:handle(cb.Text) or ""
     end))
 
     table.insert(cons, sv.UserInputService.InputBegan:Connect(function(a, b)
@@ -986,19 +999,19 @@ function lib:commandbar() -- i dont wanna fuckin make this rn
                             local con = sv.UserInputService.InputBegan:Connect(function(a, b)
                                 if b then return end
 
-                                if output then
-                                    output.obj:Remove()
+                                if a.UserInputType == Enum.UserInputType.MouseButton1 and IsInFrame(opbox, GetMousePosition()) then
+                                    if output then
+                                        output.obj:Remove()
 
-                                    for i,v in next, output:children(true) do
-                                        v.obj:Remove()
+                                        for i,v in next, output:children(true) do
+                                            v.obj:Remove()
+                                        end
+
+                                        output = nil
+
+                                        return
                                     end
 
-                                    output = nil
-
-                                    return
-                                end
-
-                                if a.UserInputType == Enum.UserInputType.MouseButton1 and IsInFrame(opbox, GetMousePosition()) then
                                     output = GetGradientBox(true)
                                     local scbox = GetGradientBox(true)
                                     local outtitle = Draw "Text"
@@ -1030,12 +1043,31 @@ function lib:commandbar() -- i dont wanna fuckin make this rn
                                         paddingbottom = 2
                                     })
 
-                                    for i,v in next, ops do
-                                        
-                                    end
-
                                     setmetatable(ops, {
                                         __newindex = function(t, k, v)
+                                            if not v or v == "" then return end
+
+                                            local newv = TextWrapY(v, 16, 186)
+                                            local sizey = GetTextSize(newv, 16, Drawing.Fonts.Monospace).Y
+                                            local text = Draw "Text"
+                                            local y = scbox.Size.Y - sizey - 2
+                                            for i,_v in next, scbox:children(true) do
+                                                if typeof(_v.TextBounds) ~= "Vector2" then continue end
+
+                                                _v.Position -= Vector2.new(0, sizey)
+                                                _v.Visible = _v.Position.Y > scbox.Position.Y
+                                            end
+
+                                            text.Visible = true
+                                            text.Outline = true
+                                            text.Color = Color3.new(1,1,1)
+                                            text.Size = 16
+                                            text.Font = Drawing.Fonts.Monospace
+                                            text.Text = v
+                                            text.Position = scbox.Position + Vector2.new(2, y)
+                                            text.parent = scbox
+                                            text.ZIndex = 3
+
                                             rawset(t, k, v)
                                         end
                                     })
@@ -1493,8 +1525,9 @@ function lib:new(libname, logodata)
             tbox.ZIndex = 2
             tbox.parent = par
             tbox.name = sname
+            tbox.Transparency = i == 1 and 1 or 0
 
-            Box(tbox, 2)
+            Box(tbox, 2).s.Transparency = i == 1 and 1 or 0
 
             do
                 local tl = Draw "Text"
@@ -1507,6 +1540,7 @@ function lib:new(libname, logodata)
                 tl.Position = tbox.Position + Vector2.new(2)
                 tl.Text = sname
                 tl.parent = tbox
+                tl.Transparency = i == 1 and 1 or 0
                 tl.name = "label"
                 tl.ZIndex = 2
 
@@ -2743,13 +2777,13 @@ if isv2 then
     })
 end
 
-task.delay(15, table.foreach, cons, function(_, v) -- Disconnecting all of these kills the library
-    v:Disconnect()
-end)
-
-return lib, {["GetGradientBox"] = GetGradientBox, ["Draw"] = Draw, ["Scrolling"] = Scrolling, ["GetTextSize"] = GetTextSize, ["DeltaIter"] = DeltaIter, ["Ease"] = Ease, ["IsInFrame"] = IsInFrame, ["IsInCircle"] = IsInCircle}
-
 --[==[
+    local cbar = lib:commandbar()
+    cbar:add("print", {"p"}, "prints stuff to output", function(...)
+        return table.concat({...}, " ")
+    end)
+    cbar:add("toremove")
+    cbar:handle("print stuff")
 
     local binds = lib:bindlist()
     local bind = binds:add("Bind down", Enum.KeyCode.X, true, print)
@@ -2770,12 +2804,13 @@ return lib, {["GetGradientBox"] = GetGradientBox, ["Draw"] = Draw, ["Scrolling"]
         Error = true,
         Time = 5
     })
-    lib:note("Professiona Generation", {
+    lib:note("Professional Generation", {
         Time = 2
     })
 
-    local j, libfuncs = syn.request({"https://raw.githubusercontent.com/GFXTI/ProfessionalGeneration/main/Library.lua"}).Body
+    local j, libfuncs = loadstring(syn.request({Url = "https://raw.githubusercontent.com/GFXTI/ProfessionalGeneration/main/Library.lua"}).Body)()
     --local j = lib:new("Professional Generation", syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/pglogo.png?raw=true"}).Body) -- make library -> table (2nd arg is optional for a logo)
+    j:tab"MONEY HACK":side "its over":button("one piece", print)
     local b = j:tab"Main tab" -- new tab with name -> table
     local t = b:side "side tab" -- new side tab with name -> table
     t:button("button", function() -- name, callback
@@ -2796,7 +2831,18 @@ return lib, {["GetGradientBox"] = GetGradientBox, ["Draw"] = Draw, ["Scrolling"]
     t:textbox("textbox", "text", print) -- name, background text, callback -> string
     t:angler("angler", 90, print) -- name, default angle, callback -> number (You need to manually convert it to an angle through math.rad)
     b:side "stab2":toggle("ninjas", true, print)
-    j:tab"MONEY HACK"
 
-    task.wait(30)
+    task.wait(15)
+    loader:finish()
+    bind:remove()
+    cbar:remove("toremove")
+    cbar:destroy()
+
+    task.wait(15)
+
+    table.foreach(cons, function(_, v) -- kills everything
+        v:Disconnect()
+    end)
 ]==]
+
+return lib, {["GetGradientBox"] = GetGradientBox, ["Draw"] = Draw, ["Scrolling"] = Scrolling, ["GetTextSize"] = GetTextSize, ["DeltaIter"] = DeltaIter, ["Ease"] = Ease, ["IsInFrame"] = IsInFrame, ["IsInCircle"] = IsInCircle}
