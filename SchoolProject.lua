@@ -8,19 +8,79 @@
     Size & Position clamping
     Tweening
     More frame types
-    Finsih dragging
     Finish scrolling
 ]]
 
 local Dinstance = {} do
     local GradientData = syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/angryimg.png?raw=true"}).Body
     local DraggableFrames, ScrollableFrames = {}, {}
-    local mousepos = Vector2.zero
+    local mp = Vector2.zero
     local sv = {
         uis = cloneref(game:service "UserInputService"),
         core = cloneref(game:service "CoreGui"),
         run = cloneref(game:service "RunService")
     } -- Services if u couldn't tell (i dont wanna type it all out)
+    local Frames = {} -- to prevent gc
+
+    function Lerp(a, b, t)
+        return a + (b - a) * t
+    end
+
+    local function GetTextSize(text, size, font)
+        local t = Drawing.new "Text"
+
+        t.Text = text
+        t.Size = size
+        t.Font = font
+
+        return t.TextBounds
+    end
+
+    local function clamp(a, b, c)
+        return a < b and b or a > c and c or a
+    end
+
+    local function TextWrapY(text, textsize, x)
+        local lines = {}
+        local cx = 0
+        local start = 1
+        local i = 1
+
+        text:gsub(".", function(v)
+            local size = GetTextSize(text, textsize, Drawing.Fonts.Monospace).X
+            i += 1
+
+            if size + cx < x then
+                cx += size
+            else
+                table.insert(lines, text:sub(start, i))
+                start = i + 1
+                cx = 0
+            end
+        end)
+
+        return table.concat(lines, "\n")
+    end
+
+    local function DeltaIter(start, _end, mult, callback)
+        local up
+        local rstep = sv.run.RenderStepped
+
+        if _end > start then
+            up = true
+        end
+
+        while true do
+            if up and start > _end then break end
+            if not up and _end > start then break end
+
+            start += rstep:wait() * (up and 1 or -1) * mult
+            task.spawn(callback, start)
+        end
+
+        rstep:wait()
+        callback(_end)
+    end
 
     local function GetFinalParent(frame)
         while frame.Parent do
@@ -52,28 +112,23 @@ local Dinstance = {} do
         return pos
     end
 
+    local function IsInFrame(frame)
+        local pos = frame.Parent and GetActualPosition(frame) or frame.Position
+
+        return pos.Y < mp.Y and mp.Y < pos.Y + frame.Size.Y and pos.X < mp.X and mp.X < pos.X + frame.Size.X
+    end
+
     local function UpdateBox(props, frames) -- more of update than updatebox
         local msize = frames.Main.Size or frames.Main.TextBounds or frames.Main.Radius or (frames.PointB - frames.PointD) -- ill add the uhh custom outline objects later ("Circle", "Quad", and other stuff)
+        local pos = props.Parent and props.Parent.Position or Vector2.zero
 
-        if props.Drag then
-            table.insert(DraggableFrames, frames.Main)
-        else
-            local Found = table.find(DraggableFrames, frames.Main)
-
-            if Found then
-                table.remove(DraggableFrames, Found)
+        if props.Parent then
+            for i, v in GetParents(props.Parent) do
+                pos += v.Position
             end
         end
 
-        if props.Scrolling then
-            table.insert(ScrollableFrames, frames.Main)
-        else
-            local Found = table.find(ScrollableFrames, frames.Main)
-
-            if Found then
-                table.remove(ScrollableFrames, Found)
-            end
-        end
+        frames.Main.Position = pos + props.Position or props.Position
 
         if tostring(frames.Main) == "Circle" then
             for i,v in frames do
@@ -86,137 +141,24 @@ local Dinstance = {} do
                 v.Radius = frames.Main.Radius + ((props.OutlineThickness / 2) * (i:find("In") and -1 or 1))
                 v.ZIndex = frames.Main.ZIndex
             end
-            
+
             return
         end
-        
-        if table.find({"Image", "Square"}, tostring(frames.Main))
+
+        if table.find({"Image", "Square"}, tostring(frames.Main)) then
             frames.Outline.Visible = props.Outline and frames.Main.Visible
             frames.Outline.Color = props.OutlineColor
             frames.Outline.Thickness = props.OutlineThickness
-            frames.Outline.Position = frames.Main.Position - Vector2.new(props.OutlineThickness, props.OutlineThickness)
+            frames.Outline.Position = frames.Main.Position - Vector2.new(props.OutlineThickness / 2, props.OutlineThickness / 2)
             frames.Outline.Size = msize + Vector2.new(props.OutlineThickness, props.OutlineThickness)
             frames.Outline.ZIndex = frames.Main.ZIndex
         end
     end
 
-    local newindex = function(t, k, v)
-        if k == "Position" then
-            t.__frames.Main.Position = props.Parent and props.Parent.Position + props.Position or props.Position
-            local actualframepos = Vector2.zero
-            for i,v in GetParents(t.__frames.Main) do
-                actualframepos += v.Position
-            end
-
-            for i,v in t.__children do
-                v.Position = GetActualPosition(t.__.Frames) + v.Position
-            end
-        end
-
-        t.props[k] = v
-        UpdateBox(t.props, t.frames)
-    end
-
-    local Types = {
-        ["Frame"] = function()
-            local frame = Drawing.new "Square"
-            local frames = {
-                ["Main"] = frame,
-                ["Outline"] = Drawing.new "Square"
-            }
-            local props = {
-                ["Outline"] = false,
-                ["OutlineColor"] = Color3.new(),
-                ["OutlineThickness"] = 2,
-            }
-            local children = {}
-
-            frame.Filled = true
-
-            return frame, setmetatable({["__children"] = children, ["__props"] = props, ["__frames"] = frames}, {
-                __index = props,
-                __newindex = newindex
-            })
-        end,
-        ["Text"] = function()
-            local frame = Drawing.new "Text"
-            local props = {}
-            local children = {}
-
-            return frame, setmetatable({["__children"] = children, ["__props"] = props, ["__frames"] = frames}, {
-                __index = props,
-                __newindex = newindex
-            })
-        end,
-        ["Gradient"] = function()
-            local frame = Drawing.new "Image"
-            local frames = {
-                ["Main"] = frame,
-                ["Outline"] = Drawing.new "Square"
-            }
-            local props = {
-                ["Outline"] = false,
-                ["OutlineColor"] = Color3.new(),
-                ["OutlineThickness"] = 2,
-            }
-            local children = {}
-
-            frame.Data = GradientData
-
-            return frame, setmetatable({}, {
-                __index = props,
-                __newindex = newindex
-            })
-        end,
-        ["Circle"] = function()
-            local frame = Drawing.new "Cirlce"
-            local frames = {
-                ["Main"] = frame,
-                ["OutlineIn"] = Drawing.new "Cirlce",
-                ["OutlineOut"] = Drawing.new "Circle"
-            }
-            local props = {
-                ["Outline"] = false,
-                ["OutlineColor"] = Color3.new(),
-                ["OutlineThickness"] = 2
-            }
-            local children = {}
-
-            return frame, setmetatable({}, {
-                __index = props,
-                __newindex = newindex
-            })
-        end,
-    }
-    
-    function Dinstance.new(Type)
-        local Object, Metatable = Types[Type]()
-        local RawNewIndex = getrawmetatable(Metatable.__newindex)
-
-        setmetatable(Metatable, {
-            __newindex = function(t, k, v)
-                if k == "Parent" then
-                    if Metatable.__props.Parent then
-                        local oldparent = Metatable.__props.Parent.__children
-                        table.remove(oldparent, table.find(oldparent, Metatable))
-
-                        if v then
-                            table.insert(v.__children, Metatable)
-                        end
-                    end
-                end
-
-                RawNewIndex(t, k, v)
-            end
-        })
-
-        return Metatable
-    end
-
     local funcs = {
         ["Children"] = function(self, recursive)
             local children = {}
-            
+
             for _,v in self.__children do
                 table.insert(children, v)
 
@@ -249,29 +191,191 @@ local Dinstance = {} do
         end
     }
 
-    for i,v in funcs do
-        Dinstance[i] = v
-        Dinstance[i:lower()] = v
+    local Types = {
+        ["Frame"] = function()
+            local frame = Drawing.new "Square"
+            local frames = {
+                ["Main"] = frame,
+                ["Outline"] = Drawing.new "Square"
+            }
+            local props = {
+                ["Outline"] = false,
+                ["OutlineColor"] = Color3.new(),
+                ["OutlineThickness"] = 2,
+                ["Position"] = Vector2.zero,
+                ["Size"] = Vector2.new(200, 200)
+            }
+            local children = {}
+            local cons = {
+                Mouse1Click = Instance.new"BindableEvent".Event,
+                Mouse2Click = Instance.new"BindableEvent".Event,
+                Hovered = Instance.new"BindableEvent".Event,
+            }
+
+            sv.uis.InputBegan:Connect(function(input, ret)
+                if ret then return end
+
+                if IsInFrame(frame) then
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        cons.Mouse1Click:Fire(mp)
+                    end
+
+                    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+                        cons.Mouse2Click:Fire(mp)
+                    end
+                end
+            end)
+
+            frame.Filled = true
+
+            return frame, {["__children"] = children, ["__props"] = props, ["__frames"] = frames, ["__connections"] = cons}
+        end,
+        ["Text"] = function()
+            local frame = Drawing.new "Text"
+            local props = {
+                ["Position"] = Vector2.zero,
+                ["Size"] = 18
+            }
+            local children = {}
+            local cons = {}
+
+            return frame, {["__children"] = children, ["__props"] = props, ["__frames"] = {}, ["__connections"] = cons}
+        end,
+        ["Gradient"] = function()
+            local frame = Drawing.new "Image"
+            local frames = {
+                ["Main"] = frame,
+                ["Outline"] = Drawing.new "Square"
+            }
+            local props = {
+                ["Outline"] = false,
+                ["OutlineColor"] = Color3.new(),
+                ["OutlineThickness"] = 2,
+                ["Position"] = Vector2.zero,
+                ["Size"] = Vector2.new(200, 200)
+            }
+            local children = {}
+            local cons = {}
+
+            frame.Data = GradientData
+
+            return frame, {["__children"] = children, ["__props"] = props, ["__frames"] = frames, ["__connections"] = cons}
+        end,
+        ["Circle"] = function()
+            local frame = Drawing.new "Cirlce"
+            local frames = {
+                ["Main"] = frame,
+                ["OutlineIn"] = Drawing.new "Cirlce",
+                ["OutlineOut"] = Drawing.new "Circle"
+            }
+            local props = {
+                ["Outline"] = false,
+                ["OutlineColor"] = Color3.new(),
+                ["OutlineThickness"] = 2,
+                ["Position"] = Vector2.zero,
+                ["Size"] = Vector2.new(200, 200)
+            }
+            local children = {}
+            local cons = {}
+
+            return frame, {["__children"] = children, ["__props"] = props, ["__frames"] = frames, ["__connections"] = cons}
+        end,
+    }
+
+    function Dinstance.new(Type)
+        local Object, Metatable = Types[Type]()
+        table.insert(Frames, Metatable)
+
+        for i,v in Metatable.__props do
+            if Object[i] then
+                Object[i] = v
+            end
+        end
+
+        for i,v in funcs do
+            Metatable[i] = v
+            Metatable[i:lower()] = v
+        end
+
+        return setmetatable(Metatable, {
+            __newindex = function(t, k, v)
+                if k == "Parent" then
+                    if Metatable.__props.Parent then
+                        local oldparent = Metatable.__props.Parent.__children
+
+                        table.remove(oldparent, table.find(oldparent, Metatable))
+                    end
+
+                    if v then
+                        table.insert(v.__children, Metatable)
+                    end
+                end
+
+                if k == "Drag" then
+                    if v then
+                        if t.__props.Drag then return end
+
+                        table.insert(DraggableFrames, Metatable)
+                    else
+                        local Found = table.find(DraggableFrames, Metatable)
+
+                        if Found then
+                            table.remove(DraggableFrames, Found)
+                        end
+                    end
+                end
+
+                if k == "Scrollable" then
+                    if v then
+                        if t.__props.Scrollable then return end
+
+                        table.insert(ScrollableFrames, Metatable)
+                    else
+                        local Found = table.find(ScrollableFrames, Metatable)
+
+                        if Found then
+                            table.remove(ScrollableFrames, Found)
+                        end
+                    end
+                end
+
+                if k == "Position" then
+                    for i,obj in Metatable:children() do
+                        obj.Position = obj.Position
+                    end
+                end
+
+                if t.__frames.Main[k] ~= nil and k ~= "Position" then
+                    t.__frames.Main[k] = v
+                end
+
+                t.__props[k] = v
+                UpdateBox(t.__props, t.__frames)
+            end,
+            __index = function(_, v)
+                return _.__props[v] or _.__children[v] or _.__connections[v]
+            end,
+        })
     end
 
     Dinstance.__index = Dinstance
 
-    sv.uis.InputChanged:Connect(function() 
+    sv.uis.InputChanged:Connect(function()
         mp = sv.uis:GetMouseLocation()
     end)
 
     do
-        sv.uis.InputBegan:Connect(function(input, ret) 
+        sv.uis.InputBegan:Connect(function(input, ret)
             if ret then return end
             if input.UserInputType == Enum.UserInputType.MouseWheel then
-                local up = a.Position.Z > 0
+                local up = input.Position.Z > 0
 
                 for _,frame in ScrollableFrames do
                     DeltaIter(0, 1, 10, function(i)
                         for __,v in frame:children() do
-                            v.Position += Vector2.new(0, i * 20)
+                            v.Position += Vector2.new(0, i * 20 * (up and -1 or 1))
                         end
-                    end
+                    end)
                 end
             end
         end)
@@ -280,7 +384,7 @@ local Dinstance = {} do
     do
         local OldPos, Connection = Vector2.zero
 
-        sv.uis.InputBegan:Connect(function(input, ret) 
+        sv.uis.InputBegan:Connect(function(input, ret)
             if ret then return end
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 for i,v in DraggableFrames do
@@ -288,26 +392,73 @@ local Dinstance = {} do
                         local _continue
 
                         for _i, _v in v:children(true) do
-                            if (_v.Active and IsInFrame(_v) and _v.Opacity ~= 0 and _v.Visible and _v.ZIndex > v.ZIndex) then
+                            if (_v.Active and IsInFrame(_v) and _v.Opacity ~= 0 and _v.Visible) then
                                 _continue = true
-                                
+
                                 break
                             end
                         end
 
                         if _continue then continue end
 
-                        local offset = GetActualPosition(v) - mp
+                        if Connection then
+                            Connection:Disconnect()
+                        end
 
-                        local Connection = sv.run.RenderStepped:Connect(function() 
+                        local offset = (v.Parent and GetActualPosition(v) - mp or mp) - v.Position
+
+                        Connection = sv.run.RenderStepped:Connect(function()
                             if OldPos == mp then return end
                             OldPos = mp
 
-                            v.Position = mp - offset
+                            v.Position = (v.Parent and v.Parent.Position or Vector2.zero) + mp - offset
                         end)
                     end
                 end
             end
         end)
+
+        sv.uis.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if Connection then
+                    Connection:Disconnect()
+                end
+            end
+        end)
     end
 end
+
+local frame = Dinstance.new "Gradient"
+local frame2 = Dinstance.new "Gradient"
+local frame3 = Dinstance.new "Gradient"
+frame.Visible = true
+frame.Position = Vector2.new(5, 5)
+frame.Size = Vector2.new(200, 200)
+frame.Drag = true
+frame.Color = Color3.new(.3, .3, .3)
+frame.Outline = true
+frame.OutlineColor = Color3.new(0.078431, 0.333333, 0.878431)
+
+frame2.Visible = true
+frame2.Position = Vector2.new(-89, 10)
+frame2.Size = Vector2.new(180, 180)
+frame2.Parent = frame
+frame2.Color = Color3.new(.2, .2, .2)
+
+--[[frame3.Visible = true
+frame3.Position = Vector2.new(10, 10)
+frame3.Size = Vector2.new(160, 160)
+frame3.Parent = frame2
+frame3.Color = Color3.new(.1, .1, .1)]]
+
+task.wait(5)
+
+table.foreach(frame.__frames, function(_, v)
+    v:Destroy()
+end)
+table.foreach(frame2.__frames, function(_, v)
+    v:Destroy()
+end)
+table.foreach(frame3.__frames, function(_, v)
+    v:Destroy()
+end)
