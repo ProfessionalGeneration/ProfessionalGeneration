@@ -1,13 +1,15 @@
 -- hi advisory teacher 😀
 -- uhh to fill u in it basically a ui object base with parenting system
+
 -- made this at school with absolutely NO debugging (quite the challenge aint it)
 -- ill mess with OOP in school cuz why not (and remake my "Draw" stuff to be a bit more useful)
+
 --[[ TODO:
     Size & Position clamping -- ok screw that ill do it later
     Finish scrolling
 ]]
 
-local Dinstance = {} do
+local Dinstance, Funcs = {}, {} do
     local GradientData = syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/angryimg.png?raw=true"}).Body
     local DraggableFrames, ScrollableFrames = {}, {}
     local mp = Vector2.zero
@@ -19,7 +21,7 @@ local Dinstance = {} do
     } -- Services if u couldn't tell (i dont wanna type it all out)
     local Frames = {} -- to prevent gc
 
-    function Lerp(a, b, t)
+    local function Lerp(a, b, t)
         return a + (b - a) * t
     end
 
@@ -100,13 +102,7 @@ local Dinstance = {} do
     end
 
     local function GetActualPosition(frame)
-        local pos = frame.Position
-
-        for i,v in GetParents(frame) do
-            pos += v.Position
-        end
-
-        return pos
+        return frame.__frames.Main.Position
     end
 
     local function IsInFrame(frame)
@@ -152,6 +148,14 @@ local Dinstance = {} do
             frames.Outline.ZIndex = frames.Main.ZIndex
         end
     end
+
+    Funcs = {
+        ["IsInFrame"] = IsInFrame,
+        ["DeltaIter"] = DeltaIter,
+        ["GetTextSize"] = GetTextSize,
+        ["Lerp"] = Lerp,
+        ["GetActualPosition"] = GetActualPosition,
+    }
 
     local funcs = {
         ["Children"] = function(self, recursive)
@@ -577,6 +581,8 @@ local Dinstance = {} do
 end
 
 --[[
+    -- Scrolling will be added later
+
     DOCUMENTATION:
         local Frame = Dinstance.new "Frame"
 
@@ -618,4 +624,4 @@ end
         Text.Active = true
 ]]
 
-return Dinstance
+return Dinstance, Funcs
