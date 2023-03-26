@@ -124,6 +124,10 @@ local Dinstance, Funcs = {}, {} do
 
         frames.Main.Position = pos + props.Position or props.Position
 
+        if tostring(frames) == "Text" then
+            props["TextBounds"] = frames.Main.TextBounds
+        end
+
         if tostring(frames.Main) == "Circle" then
             for i,v in frames do
                 if i == "Main" then continue end
@@ -534,7 +538,7 @@ local Dinstance, Funcs = {}, {} do
     end
 
     do
-        local OldPos, offset, frame, Connection = Vector2.zero, Vector2.zero
+        local offset, frame, Connection = Vector2.zero
 
         sv.uis.InputBegan:Connect(function(input, ret)
             if ret then return end
@@ -561,9 +565,6 @@ local Dinstance, Funcs = {}, {} do
                         offset = (v.Parent and GetActualPosition(v) - mp or mp) - v.Position
 
                         Connection = sv.run.RenderStepped:Connect(function()
-                            if OldPos == mp then return end
-                            OldPos = mp
-
                             v.Position = (v.Parent and v.Parent.Position or Vector2.zero) + mp - offset
                         end)
                     end
