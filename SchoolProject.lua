@@ -534,7 +534,7 @@ local Dinstance, Funcs = {}, {} do
     end
 
     do
-        local OldPos, Connection = Vector2.zero
+        local OldPos, offset, frame, Connection = Vector2.zero, Vector2.zero
 
         sv.uis.InputBegan:Connect(function(input, ret)
             if ret then return end
@@ -557,7 +557,8 @@ local Dinstance, Funcs = {}, {} do
                             Connection:Disconnect()
                         end
 
-                        local offset = (v.Parent and GetActualPosition(v) - mp or mp) - v.Position
+                        frame = v
+                        offset = (v.Parent and GetActualPosition(v) - mp or mp) - v.Position
 
                         Connection = sv.run.RenderStepped:Connect(function()
                             if OldPos == mp then return end
@@ -575,6 +576,9 @@ local Dinstance, Funcs = {}, {} do
                 if Connection then
                     Connection:Disconnect()
                 end
+
+                frame.Position = mp
+                frame = nil
             end
         end)
     end
