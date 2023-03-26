@@ -1,13 +1,9 @@
 -- hi advisory teacher 😀
 -- uhh to fill u in it basically a ui object base with parenting system
-
 -- made this at school with absolutely NO debugging (quite the challenge aint it)
 -- ill mess with OOP in school cuz why not (and remake my "Draw" stuff to be a bit more useful)
-
 --[[ TODO:
-    Size & Position clamping
-    Tweening
-    More frame types
+    Size & Position clamping -- ok screw that ill do it later
     Finish scrolling
 ]]
 
@@ -18,7 +14,8 @@ local Dinstance = {} do
     local sv = {
         uis = cloneref(game:service "UserInputService"),
         core = cloneref(game:service "CoreGui"),
-        run = cloneref(game:service "RunService")
+        run = cloneref(game:service "RunService"),
+        ts = cloneref(game:service "TweenService")
     } -- Services if u couldn't tell (i dont wanna type it all out)
     local Frames = {} -- to prevent gc
 
@@ -114,16 +111,17 @@ local Dinstance = {} do
 
     local function IsInFrame(frame)
         local pos = frame.Parent and GetActualPosition(frame) or frame.Position
+        local size = typeof(frame.Size) == "Vector2" and frame.Size or frame.TextBounds
 
-        return pos.Y < mp.Y and mp.Y < pos.Y + frame.Size.Y and pos.X < mp.X and mp.X < pos.X + frame.Size.X
+        return pos.Y < mp.Y and mp.Y < pos.Y + size.Y and pos.X < mp.X and mp.X < pos.X + size.X
     end
 
     local function UpdateBox(props, frames) -- more of update than updatebox
-        local msize = frames.Main.Size or frames.Main.TextBounds or frames.Main.Radius or (frames.PointB - frames.PointD) -- ill add the uhh custom outline objects later ("Circle", "Quad", and other stuff)
+        local msize = frames.Main.Size or frames.Main.TextBounds or frames.Main.Radius -- ill add the uhh custom outline objects later ("Circle", "Quad", and other stuff)
         local pos = props.Parent and props.Parent.Position or Vector2.zero
 
         if props.Parent then
-            for i, v in GetParents(props.Parent) do
+            for i,v in GetParents(props.Parent) do
                 pos += v.Position
             end
         end
@@ -176,7 +174,7 @@ local Dinstance = {} do
                 v:Destroy()
             end
 
-            for _,child in self:children() do
+            for _,child in self:children(true) do
                 for __,v in child.__frames do
                     v:Destroy()
                 end
@@ -186,6 +184,37 @@ local Dinstance = {} do
             for i,v in self:children(recursive) do
                 if v.name == name then
                     return v
+                end
+            end
+        end,
+        ["Tween"] = function(self, tweeninfo, properties)
+            local startprops = {}
+
+            for i in properties do
+                startprops[i] = self[i]
+            end
+
+            if tweeninfo.DelayTime or tweeninfo.delayTime then -- no fucking clue why roblox has this they clearly havent heard of "task.delay"
+                task.wait(tweeninfo.DelayTime or tweeninfo.delayTime)
+            end
+
+            for i = 0, tweeninfo.RepeatCount or tweeninfo.repeatCount or 1 do
+                DeltaIter(0, 1, 1 / (tweeninfo.Time or tweeninfo.time or 1), function(inc)
+                    local eased = sv.ts:GetValue(inc, tweeninfo.EasingStyle or tweeninfo.easingStyle or Enum.EasingStyle.Quad, tweeninfo.EasingDirection or tweeninfo.easingDirection or Enum.EasingDirection.Out)
+
+                    for _, v in properties do
+                        self[_] = startprops[_]:lerp(v, eased)
+                    end
+                end)
+
+                if tweeninfo.Reverses then
+                    DeltaIter(1, 0, 1 / (tweeninfo.Time or tweeninfo.time or 1), function(inc)
+                        local eased = sv.ts:GetValue(inc, tweeninfo.EasingStyle or tweeninfo.easingStyle or Enum.EasingStyle.Quad, tweeninfo.EasingDirection or tweeninfo.easingDirection or Enum.EasingDirection.Out)
+
+                        for _, v in properties do
+                            self[_] = startprops[_]:lerp(v, eased)
+                        end
+                    end)
                 end
             end
         end
@@ -207,9 +236,9 @@ local Dinstance = {} do
             }
             local children = {}
             local cons = {
-                Mouse1Click = Instance.new"BindableEvent".Event,
-                Mouse2Click = Instance.new"BindableEvent".Event,
-                Hovered = Instance.new"BindableEvent".Event,
+                Mouse1Click = Instance.new"BindableEvent",
+                Mouse2Click = Instance.new"BindableEvent",
+                Hovered = Instance.new"BindableEvent",
             }
 
             sv.uis.InputBegan:Connect(function(input, ret)
@@ -232,14 +261,71 @@ local Dinstance = {} do
         end,
         ["Text"] = function()
             local frame = Drawing.new "Text"
+            local tb, tbcon = Instance.new "TextBox" -- yes this is the only "roblox ui" because im not fucking making an entire keyboard handler
             local props = {
                 ["Position"] = Vector2.zero,
-                ["Size"] = 18
+                ["Size"] = 18,
+                ["CanType"] = false
             }
             local children = {}
-            local cons = {}
+            local cons = {
+                Mouse1Click = Instance.new"BindableEvent",
+                Mouse2Click = Instance.new"BindableEvent",
+                Hovered = Instance.new"BindableEvent",
+                -- custom
+                Focused = Instance.new"BindableEvent",
+                Typing = Instance.new"BindableEvent",
+                FocusLost = Instance.new"BindableEvent",
+            }
 
-            return frame, {["__children"] = children, ["__props"] = props, ["__frames"] = {}, ["__connections"] = cons}
+            cons.Mouse1Click.Event:Connect(function(pos)
+                print(pos)
+                if props.CanType and frame.Visible and frame.Opacity > .1 and IsInFrame({Position = frame.Position, TextBounds = Vector2.new(math.clamp(frame.TextBounds.X, 10, math.huge), props.Size)}) then
+                    if tbcon then
+                        tbcon:Disconnect()
+                    end
+
+                    tb.Parent = sv.core
+                    tb:CaptureFocus()
+                    tb.Text = frame.Text
+                    tb.CursorPosition = #frame.Text + 1
+                    cons.Focused:Fire()
+                    tbcon = tb.Changed:Connect(function()
+                        frame.Text = tb.Text
+                        cons.Typing:Fire(tb.Text)
+                    end)
+
+                    tb.FocusLost:Once(function()
+                        tbcon:Disconnect()
+                        cons.FocusLost:Fire()
+                        tb.Parent = nil
+                    end)
+                end
+            end)
+
+            return frame, {["__children"] = children, ["__props"] = props, ["__frames"] = {["Main"] = frame}, ["__connections"] = cons}
+        end,
+        ["Image"] = function()
+            local frame = Drawing.new "Image"
+            local frames = {
+                ["Main"] = frame,
+                ["Outline"] = Drawing.new "Square"
+            }
+            local props = {
+                ["Outline"] = false,
+                ["OutlineColor"] = Color3.new(),
+                ["OutlineThickness"] = 2,
+                ["Position"] = Vector2.zero,
+                ["Size"] = Vector2.new(200, 200)
+            }
+            local children = {}
+            local cons = {
+                Mouse1Click = Instance.new"BindableEvent",
+                Mouse2Click = Instance.new"BindableEvent",
+                Hovered = Instance.new"BindableEvent",
+            }
+
+            return frame, {["__children"] = children, ["__props"] = props, ["__frames"] = frames, ["__connections"] = cons}
         end,
         ["Gradient"] = function()
             local frame = Drawing.new "Image"
@@ -255,7 +341,11 @@ local Dinstance = {} do
                 ["Size"] = Vector2.new(200, 200)
             }
             local children = {}
-            local cons = {}
+            local cons = {
+                Mouse1Click = Instance.new"BindableEvent",
+                Mouse2Click = Instance.new"BindableEvent",
+                Hovered = Instance.new"BindableEvent",
+            }
 
             frame.Data = GradientData
 
@@ -276,7 +366,11 @@ local Dinstance = {} do
                 ["Size"] = Vector2.new(200, 200)
             }
             local children = {}
-            local cons = {}
+            local cons = {
+                Mouse1Click = Instance.new"BindableEvent",
+                Mouse2Click = Instance.new"BindableEvent",
+                Hovered = Instance.new"BindableEvent",
+            }
 
             return frame, {["__children"] = children, ["__props"] = props, ["__frames"] = frames, ["__connections"] = cons}
         end,
@@ -297,6 +391,46 @@ local Dinstance = {} do
             Metatable[i:lower()] = v
         end
 
+        sv.uis.InputBegan:Connect(function(input, ret)
+            if not Metatable.__props.Active or ret then return end
+
+            if IsInFrame(Object) and Object.Visible and Object.Opacity > .1 then
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    Metatable.__connections.Mouse1Click:Fire(mp)
+                end
+
+                if input.UserInputType == Enum.UserInputType.MouseButton2 then
+                    Metatable.__connections.Mouse2Click:Fire(mp)
+                end
+            end
+        end)
+
+        do
+            local hovering
+
+            sv.uis.InputChanged:Connect(function(input)
+                if not Metatable.__props.Active or input.UserInputType ~= Enum.UserInputType.MouseMovement then return end
+
+                if hovering then
+                    if not IsInFrame(Object) and Object.Visible and Object.Opacity > .1 then
+                        Metatable.__connections.Hovered:Fire(false)
+                        hovering = false
+
+                        return
+                    end
+                end
+
+                if not hovering then
+                    if IsInFrame(Object) and Object.Visible and Object.Opacity > .1 then
+                        Metatable.__connections.Hovered:Fire(true)
+                        hovering = true
+
+                        return
+                    end
+                end
+            end)
+        end
+
         return setmetatable(Metatable, {
             __newindex = function(t, k, v)
                 if k == "Parent" then
@@ -308,6 +442,12 @@ local Dinstance = {} do
 
                     if v then
                         table.insert(v.__children, Metatable)
+                    end
+
+                    if not v.Visible then
+                        for i,v in t.__frames do
+                            v.Visible = false
+                        end
                     end
                 end
 
@@ -345,6 +485,14 @@ local Dinstance = {} do
                     end
                 end
 
+                if k == "Visible" then
+                    for i,obj in Metatable:children(true) do
+                        for _, frame in obj.__frames do
+                            frame.Visible = v and obj.Visible
+                        end
+                    end
+                end
+
                 if t.__frames.Main[k] ~= nil and k ~= "Position" then
                     t.__frames.Main[k] = v
                 end
@@ -353,7 +501,7 @@ local Dinstance = {} do
                 UpdateBox(t.__props, t.__frames)
             end,
             __index = function(_, v)
-                return _.__props[v] or _.__children[v] or _.__connections[v]
+                return _.__props[v] or _.__children[v] or (_.__connections[v] and _.__connections[v].Event)
             end,
         })
     end
@@ -392,7 +540,7 @@ local Dinstance = {} do
                         local _continue
 
                         for _i, _v in v:children(true) do
-                            if (_v.Active and IsInFrame(_v) and _v.Opacity ~= 0 and _v.Visible) then
+                            if (_v.Active and IsInFrame(_v) and _v.Opacity ~= 0 and _v.Visible and v.__frames.Main.ZIndex <= _v.__frames.Main.ZIndex) then
                                 _continue = true
 
                                 break
@@ -428,37 +576,46 @@ local Dinstance = {} do
     end
 end
 
-local frame = Dinstance.new "Gradient"
-local frame2 = Dinstance.new "Gradient"
-local frame3 = Dinstance.new "Gradient"
-frame.Visible = true
-frame.Position = Vector2.new(5, 5)
-frame.Size = Vector2.new(200, 200)
-frame.Drag = true
-frame.Color = Color3.new(.3, .3, .3)
-frame.Outline = true
-frame.OutlineColor = Color3.new(0.078431, 0.333333, 0.878431)
+--[[
+    DOCUMENTATION:
+        local Frame = Dinstance.new "Frame"
 
-frame2.Visible = true
-frame2.Position = Vector2.new(-89, 10)
-frame2.Size = Vector2.new(180, 180)
-frame2.Parent = frame
-frame2.Color = Color3.new(.2, .2, .2)
+        -- Normal properties
+        Frame.Position = Vector2.new(1000, 500) -- Default 0, 0
+        Frame.Size = Vector2.new(200, 200) -- Default 200, 200
+        Frame.Visible = true -- Remember to set this to true, as drawing objects are defaulted to false
 
---[[frame3.Visible = true
-frame3.Position = Vector2.new(10, 10)
-frame3.Size = Vector2.new(160, 160)
-frame3.Parent = frame2
-frame3.Color = Color3.new(.1, .1, .1)]]
+        -- Dragging
+        Frame.Drag = true
 
-task.wait(5)
+        local Gradient = Dinstance.new "Gradient"
 
-table.foreach(frame.__frames, function(_, v)
-    v:Destroy()
-end)
-table.foreach(frame2.__frames, function(_, v)
-    v:Destroy()
-end)
-table.foreach(frame3.__frames, function(_, v)
-    v:Destroy()
-end)
+        -- Normal properties
+        Gradient.Position = Vector2.new(10, 10) -- Positions are relative to the frames they are parented too
+        Gradient.Size = Vector2.new(180, 180)
+        Gradient.Visible = true
+
+        -- Parenting
+        Gradient.Parent = Frame
+
+        -- Outlines
+        Frame.Outline = true -- Default false
+        Frame.OutlineThickness = 2 -- Default 2
+        Frame.OutlineColor = Color3.new(.15, .15, .15) -- Default Color3.new(0, 0, 0)
+
+        local Text = Dinstance.new "Text"
+        -- Normal properties
+
+        Text.Position = Vector2.new(500, 500)
+        Text.Text = "Text frame"
+        Text.Visible = true
+        Text.Size = 20
+        Text.Outline = true
+        Text.Color = Color3.new(1, 1, 1)
+
+        -- Custom properties
+        Text.CanType = true -- frame.Active must be set to true for you to interact with it (excluding dragging)
+        Text.Active = true
+]]
+
+return Dinstance
