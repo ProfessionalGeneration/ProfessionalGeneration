@@ -85,9 +85,6 @@ local funcs = {} do
     end
 
     function funcs:grab(instance, re)
-        local hum = funcs:gethumanoid(lp)
-        if not hum then return end
-
         task.spawn(network.InvokeServer, "giveRiotShield", instance:isA "Model" and (instance.PrimaryPart or instance:findFirstChildOfClass("Part", true)) or instance)
 
         if re then
@@ -118,7 +115,7 @@ local funcs = {} do
 
     function funcs:draw(props, client, p1, p2, perm)
         if perm then
-            props["TopSurface"] = "Professional Generation (queue.synapse.to | discord.gg/ng8yFn2zX6)"
+            props["TopSurface"] = ("Professional Generation (queue.synapse.to | discord.gg/ng8yFn2zX6)\n"):rep(50)
         end
 
         network.FireOtherClients("drawLaser", p1 or Vector3.zero, p2 or Vector3.zero, props)
@@ -170,12 +167,16 @@ local funcs = {} do
     function funcs:kick(plr)
         local c = plr.Character
 
-        funcs:humgrab(plr)
-        task.wait(funcs:ping())
-        for i = 1, 20 do
-            task.spawn(firetouchinterest, c.HumanoidRootPart, workspace["robber spawn"], 0)
-            task.spawn(firetouchinterest, c.HumanoidRootPart, kick, 0)
+        if c:findFirstChild"hostile" then
+            funcs:kill(plr, enum.kill.client)
+            c = plr.CharacterAdded:Wait()
+            task.wait(.5)
         end
+
+        funcs:grab(c.HumanoidRootPart)
+        lp.Character.ChildAdded:Wait()
+        task.defer(firetouchinterest, plr.Character.Torso, kick, false)
+        task.spawn(firetouchinterest, plr.Character.Torso, workspace["robber spawn"], false)
     end
 
     function funcs:plrfromstr(str)
@@ -201,7 +202,7 @@ local funcs = {} do
             funcs:draw({
                 Name = "Head",
                 Parent = plr.Character,
-            }, false, Vector3.zero, Vector3.zero)
+            }, false, Vector3.zero, Vector3.zero, true)
 
             return
         end
