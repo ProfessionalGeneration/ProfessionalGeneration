@@ -144,7 +144,7 @@ local Dinstance, Funcs = {}, {} do
             frames.Outline.Color = props.OutlineColor
             frames.Outline.Thickness = props.OutlineThickness
             frames.Outline.Position = frames.Main.Position - Vector2.new(props.OutlineThickness / 2, props.OutlineThickness / 2)
-            frames.Outline.Size = msize + Vector2.new(props.OutlineThickness, props.OutlineThickness)
+            frames.Outline.Size = msize + Vector2.new(props.OutlineThickness + 1, props.OutlineThickness + 1)
             frames.Outline.ZIndex = frames.Main.ZIndex
         end
     end
