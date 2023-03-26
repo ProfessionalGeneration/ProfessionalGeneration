@@ -577,8 +577,10 @@ local Dinstance, Funcs = {}, {} do
                     Connection:Disconnect()
                 end
 
-                frame.Position = mp
-                frame = nil
+                if frame then
+                    frame.Position = (frame.Parent and frame.Parent.Position or Vector2.zero) + mp - offset
+                    frame = nil
+                end
             end
         end)
     end
