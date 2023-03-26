@@ -144,7 +144,7 @@ local Dinstance, Funcs = {}, {} do
             frames.Outline.Color = props.OutlineColor
             frames.Outline.Thickness = props.OutlineThickness
             frames.Outline.Position = frames.Main.Position - Vector2.new(props.OutlineThickness / 2, props.OutlineThickness / 2)
-            frames.Outline.Size = msize + Vector2.new(props.OutlineThickness + 1, props.OutlineThickness + 1)
+            frames.Outline.Size = msize + Vector2.new(props.OutlineThickness / 2, props.OutlineThickness / 2)
             frames.Outline.ZIndex = frames.Main.ZIndex
         end
     end
@@ -586,7 +586,7 @@ local Dinstance, Funcs = {}, {} do
     end
 end
 
---[[
+--[==[
     -- Scrolling will be added later
 
     DOCUMENTATION:
@@ -628,6 +628,10 @@ end
         -- Custom properties
         Text.CanType = true -- frame.Active must be set to true for you to interact with it (excluding dragging)
         Text.Active = true
-]]
+
+        -- Functions
+        Text:Children(true --[[Recursive]])
+        Text:Tween(TweenInfo.new(2), --[[TweenInfo]], {Size = 40}--[[Properties]])
+]==]
 
 return Dinstance, Funcs
