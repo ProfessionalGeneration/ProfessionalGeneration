@@ -10,7 +10,7 @@
 ]]
 
 local Dinstance, Funcs = {}, {} do
-    local GradientData = syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/angryimg.png?raw=true"}).Body
+    local GradientData = syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/angryimg%20(1).png?raw=true"}).Body
     local DraggableFrames, ScrollableFrames = {}, {}
     local mp = Vector2.zero
     local sv = {
