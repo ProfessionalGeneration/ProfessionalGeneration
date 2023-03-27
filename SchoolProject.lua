@@ -10,7 +10,7 @@
 ]]
 
 local Dinstance, Funcs = {}, {} do
-    local GradientData = syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/angryimg%20(1).png?raw=true"}).Body
+    local GradientData = syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/angryimg%20(2).png?raw=true"}).Body
     local DraggableFrames, ScrollableFrames = {}, {}
     local mp = Vector2.zero
     local sv = {
@@ -287,7 +287,6 @@ local Dinstance, Funcs = {}, {} do
             }
 
             cons.Mouse1Click.Event:Connect(function(pos)
-                print(pos)
                 if props.CanType and frame.Visible and frame.Opacity > .1 and IsInFrame({Position = frame.Position, TextBounds = Vector2.new(math.clamp(frame.TextBounds.X, 10, math.huge), props.Size)}) then
                     if tbcon then
                         tbcon:Disconnect()
