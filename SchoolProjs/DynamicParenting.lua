@@ -96,6 +96,7 @@ local funcs = {
             child._obj:Destroy()
         end
     end,
+    --[[
     ["FindChild"] = function(self, name, recursive)
         for i,v in self:children(recursive) do
             if v.Name == name then
@@ -133,10 +134,7 @@ local funcs = {
                 end)
             end
         end
-    end,
-    ["IsInFrame"] = function(self)
-        return IsInFrame(self._obj)
-    end
+    end]]
 }
 
 local PDraw = function(Type, ...)
@@ -170,20 +168,5 @@ local PDraw = function(Type, ...)
         end
     })
 end
-
-local guipoint = PointOffset.new(Point2D.new(UDim2.new(.5, 0, .5, 0)), Vector2.new(200, 200))
-local point = PDraw("Text", guipoint)
-point.Visible = true
-point.Text = "real"
-point.Outlined = true
-point.OutlineThickness = 1
-point.OutlineOpacity = 1
-point.Color = Color3.new(1,1,1)
-point.Size = 20
-for i = 1, .5, -.005 do
-guipoint.Point = UDim2.new(.5, 0, i, 0)
-task.wait()
-end
-task.wait(5)
 
 return PDraw
