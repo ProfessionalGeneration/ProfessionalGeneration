@@ -103,7 +103,7 @@ local funcs = {
                 return v
             end
         end
-    end,
+    end,]]
     ["Tween"] = function(self, tweeninfo, properties)
         local startprops = {}
 
@@ -134,7 +134,7 @@ local funcs = {
                 end)
             end
         end
-    end]]
+    end
 }
 
 local PDraw = function(Type, ...)
