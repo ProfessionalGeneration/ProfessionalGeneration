@@ -1,5 +1,6 @@
 --[==[
     I did most of the lib (me sawd yes me)
+	ui is pretty ugly, who cares it works
 
     thank topit for the colorpicker gradient images
     THANK FRICK FOR THE ANGLER MATH THAT ONE RLY SUCKED FIXING (he pro)
@@ -203,8 +204,8 @@ local function Box(frame, z, top)
     if top then
         d.ts.Visible = true
         d.ts.Color = Color3.new(.05, .05, .05)
-        d.ts.Position = pos - Vector2.new(1, 6)
-        d.ts.Size = Vector2.new(size.X + 2, 6)
+        d.ts.Position = pos - Vector2.new(1, 5)
+        d.ts.Size = Vector2.new(size.X + 2, 4)
         d.ts.Thickness = 2
         d.ts.ZIndex = z or 1
         d.ts.parent = frame
@@ -212,9 +213,9 @@ local function Box(frame, z, top)
 
         d.l.Visible = true
         d.l.Color = lib.AccentColor
-        d.l.Position = pos - Vector2.new(-1, 4)
-        d.l.Size = Vector2.new(size.X - 2, 2)
-        d.l.Thickness = 2
+        d.l.Position = pos - Vector2.new(-1, 3)
+        d.l.Size = Vector2.new(size.X - 1, 1)
+        d.l.Thickness = 1
         d.l.ZIndex = z or 1
         d.l.parent = frame
         d.l.name = "l"
@@ -1435,8 +1436,8 @@ function lib:new(libname, logodata)
         local par = GetGradientBox(true)
         par.Visible = true
         par.Transparency = i == 1 and 1 or 0
-        par.Position = box.Position + Vector2.new(5, 52)
-        par.Size = Vector2.new(90, 329)
+        par.Position = box.Position + Vector2.new(5, 48)
+        par.Size = Vector2.new(90, 333)
         par.parent = box
         par.name = name
         par.ZIndex = 2
@@ -1471,7 +1472,7 @@ function lib:new(libname, logodata)
                 pos += v.Size.X + 10
             end
 
-            cbox.Position = box.Position + Vector2.new(5 + pos, 10)
+            cbox.Position = box.Position + Vector2.new(5 + pos, 8)
             cbox.Size = Vector2.new(sizex, 30)
             cbox.ZIndex = 2
             cbox.parent = box
@@ -1525,7 +1526,7 @@ function lib:new(libname, logodata)
                         end
 
                         otab.Transparency = 1
-                        
+
                         for _, v in next, otab:children(true) do
                             v.Transparency = ops[v] or v.op or 1
                         end
@@ -1600,8 +1601,8 @@ function lib:new(libname, logodata)
             local side = {}
 
             wbox.ZIndex = 2
-            wbox.Position = box.Position + Vector2.new(105, 52)
-            wbox.Size = Vector2.new(580, 329)
+            wbox.Position = box.Position + Vector2.new(105, 48)
+            wbox.Size = Vector2.new(580, 333)
             wbox.parent = tbox
             wbox.name = sname
             wbox.Transparency = si == 1 and i == 1 and 1 or 0
@@ -2795,12 +2796,10 @@ if isv2 then
         Time = 10,
     })
 end
-
 --[==[
-    local lib, libfuncs = loadstring(syn.request({Url = "https://raw.githubusercontent.com/GFXTI/ProfessionalGeneration/main/Library.lua"}).Body)()
-    local j = lib:new("Professional Generation", syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/pglogo.png?raw=true"}).Body)
-    --local j = lib:new("Professional Generation", syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/pglogo.png?raw=true"}).Body) -- make library -> table (2nd arg is optional for a logo)
 
+    local lib, libfuncs = loadstring(syn.request({Url = "https://raw.githubusercontent.com/GFXTI/ProfessionalGeneration/main/Library.lua"}).Body)()
+    local j = lib:new("Professional Generation", syn.request({Url = "https://github.com/GFXTI/ProfessionalGeneration/blob/main/LibraryImages/pglogo.png?raw=true"}).Body) -- make library -> table (2nd arg is optional for a logo)
     local cbar = lib:commandbar()
     cbar:add("print", {"p"}, "prints stuff to output", function(...) -- name, aliases, info, callback
         return table.concat({...}, " ")
