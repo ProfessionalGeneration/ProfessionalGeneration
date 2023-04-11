@@ -2077,6 +2077,7 @@ function lib:new(libname, logodata)
 
                                     if a.UserInputType == Enum.UserInputType.MouseButton1 and option.Visible and option.Transparency ~= 0 and IsInFrame(option, GetMousePosition()) then
                                         callback(v)
+					text.Text = ("%s [%s]"):format(bname, tostring(v))
                                     end
                                 end)
 
