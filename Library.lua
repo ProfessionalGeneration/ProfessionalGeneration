@@ -305,7 +305,7 @@ local function clamp(a, b, c)
 end
 
 local function GetMousePosition()
-    return sv.UserInputService:GetMouseLocation() - game:GetService"GuiService":GetGuiInset()
+    return sv.UserInputService:GetMouseLocation() + game:GetService"GuiService":GetGuiInset()
 end
 
 local function IsInFrame(frame, mouse)
