@@ -794,7 +794,7 @@ function lib:bindlist()
         con2 = sv.UserInputService.InputEnded:Connect(function(a)
             if not toggle and a.KeyCode == default or a.UserInputType == default then
                 bt.Color = Color3.new(1, 1, 1)
-                callback(true)
+                callback(false)
             end
         end)
 
