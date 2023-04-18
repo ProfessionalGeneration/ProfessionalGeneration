@@ -761,7 +761,7 @@ function lib:bindlist()
 
     function binds:add(name, default, toggle, callback)
         local bind = {}
-        local sb = default.EnumType == Enum.KeyCode and 14 or 19
+        local sb = default.EnumType == Enum.KeyCode and 14 or 20
         local con, toggled, con2
         local bt = Draw "Text"
 
