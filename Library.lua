@@ -772,7 +772,7 @@ function lib:bindlist()
         bt.Font = Drawing.Fonts.Monospace
         bt.Color = Color3.new(1, 1, 1)
         bt.Position = main.Position + Vector2.new(5, 2 + (len() * 20))
-        bt.Text = ("[%s | %s] %s"):format(toggle and "Toggle" or "Hold", shortendbinds[tostring(default):sub(sb)] or tostring(default):sub(sb), name)
+        bt.Text = ("[%s] %s"):format(shortendbinds[tostring(default):sub(sb)] or tostring(default):sub(sb), name)
         bt.parent = main
         bt.name = name
 
