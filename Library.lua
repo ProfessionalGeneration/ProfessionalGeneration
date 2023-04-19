@@ -167,12 +167,6 @@ local Draw, funcs do
                     end
 
                     dcon = sv.RunService.RenderStepped:Connect(function()
-                        if not sv.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
-                            dcon:Disconnect()
-
-                            return
-                        end
-
                         v.Position = sv.UserInputService:GetMouseLocation() - offset
 
                         for _,v2 in next, v:children(true) do
@@ -184,6 +178,12 @@ local Draw, funcs do
                 end
             end
         end))
+		
+		table.insert(cons, sv.UserInputService.InputEnded:Connect(function(input)
+			if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+					
+			dcon:Disconnect()
+		end))
     end
 end
 
