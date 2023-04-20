@@ -714,40 +714,6 @@ function lib:note(msg, settings) -- -> any if settings.type is question (returns
     return ret and ret.Event:Wait()
 end
 
-function lib:custom()
-    local frame = GetGradientBox(true)
-    local custom = {}
-
-    function custom:title(name, logo)
-        if name then
-            local title = Draw "Text"
-
-            title.Visible = true
-            title.Size = 18
-            title.Outline = true
-            title.Font = Drawing.Fonts.Monospace
-            title.Color = Color3.new(1, 1, 1)
-            title.Position = frame.Position + Vector2.new(main.Size.X / 2, 3)
-            title.Center = true
-            title.Text = name
-            title.parent = main
-            title.name = "title"
-        end
-
-        if logo then
-
-        end
-    end
-
-    function custom:button(name, callback)
-        local button = Draw "Square"
-
-        -- 
-    end
-
-    return custom, frame
-end
-
 function lib:bindlist()
     local binds = {}
     local bts = {}
