@@ -37,3 +37,4 @@ end)
 hooks["AntiAimIndex"] = hookmetamethod(game, "__index", function(instance, value)
     return hooks["AntiAimIndex"]
 end)
+--
