@@ -1,40 +1,25 @@
-local old; old = hookfunction(getrenv()._G.ShakeCamera, function(...) 
-    if Toggles.NoCameraShake then return end
+name.Color = table.find({"Mayor", "Soldier", "Detective"}, player.Job.Value) and Color3.new(.1, .1, .8) or player.Job.Value == "Farmer" and Color3.new(.1, .8, .1) or Color3.new(.8, .8, .8)
 
-    return old(...)
-end)
+local function LerpDeltaIter(start, _end, speed, callback)
+    local percent = 0
 
-local fake = character:Clone()
-fake.Parent = workspace
-local real = character
-local rad, rand, v3 = math.rad, math.random, Vector3.new
-local items = {}
+    while percent < 1 do
+        percent += Services.Run.RenderStepped:wait() * speed
 
-real.Character.ChildRemoved:Connect(function(item) 
-    if items[item] then
-        items[item].Parnet = nil
+        callback(Math.Lerp(start, _end, percent))
     end
-end)
 
-real.Character.ChildAdded:Connect(function(item)
-    if item:isA "Tool" then return end
+    callback(_end)
+end
 
-    items[item] = item:Clone()
-    items[item].Parent = fake
-end)
+for i,v in binds do
+    local bind = binds:add(i, v.Default, v.Toggle, v.Function)
 
-Services.Run.RenderStepped:Connect(function()
-    if not Settings.AntiAim then return end
+    binds:Toggle(i, true, function(toggled) 
+        if toggled then
+            return bind:remove()
+        end
 
-    real.HumanoidRootPart.AngularVelocity = Vector3.new(1e5, 1e5, 1e5)
-    real.HumanoidRootPart.CFrame = CFrame.new(fake.HumanoidRootPart.Position + v3(
-        rand(-5, 5), rand(-2, 2), rand(-5, 5)),
-    v3(
-        rad(rand(-180,180)), rad(rand(-180, 180)), rad(rand(-180, 180))
-    ))
-end)
-
-hooks["AntiAimIndex"] = hookmetamethod(game, "__index", function(instance, value)
-    return hooks["AntiAimIndex"]
-end)
---
+        bind = bind:add(i, v.Default, v.Toggle, v.Function)
+    end)
+end
