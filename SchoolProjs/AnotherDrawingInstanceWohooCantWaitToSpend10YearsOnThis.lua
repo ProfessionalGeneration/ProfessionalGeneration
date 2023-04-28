@@ -77,12 +77,35 @@ function Draw.Tween(self, tweeninfo, properties)
     end
 end
 
+function Draw.Destroy(self)
+    self.Object:Destroy()
+
+    for i,v in self:Children(true) do
+        v.Object:Destroy()
+    end
+end
+
+function Draw.Find(self, name, recursive)
+    for i,v in self:Children() do
+        if v.Name == name then
+            return v
+        end
+    end
+
+    if recursive then
+        for i,v in self:Children(true) do
+            if v.Name == name then
+                return v
+            end
+        end
+    end
+end
+
 function Draw.new(Type)
     local obj = Drawing.new(Type)
     local properties = {
         Draggable = false,
         Parent = nil,
-        TheThugShaker = nil,
         Name = Type,
         Object = obj
     }
