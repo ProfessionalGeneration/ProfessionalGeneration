@@ -83,7 +83,8 @@ function Draw.new(Type)
         Draggable = false,
         Parent = nil,
         TheThugShaker = nil,
-        Name = Type
+        Name = Type,
+        Object = obj
     }
 
     return setmetatable(properties, Draw)
