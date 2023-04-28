@@ -1,25 +1,29 @@
-name.Color = table.find({"Mayor", "Soldier", "Detective"}, player.Job.Value) and Color3.new(.1, .1, .8) or player.Job.Value == "Farmer" and Color3.new(.1, .8, .1) or Color3.new(.8, .8, .8)
+-- this is all theory it most likely dont work, there isnt even syntax errors on github.dev :(
 
-local function LerpDeltaIter(start, _end, speed, callback)
-    local percent = 0
+Main:Toggle("Anti void", false, function(toggle) 
+    Settings.AntiVoid = toggle
+end)
 
-    while percent < 1 do
-        percent += Services.Run.RenderStepped:wait() * speed
+Main:Toggle("Infinite jump", false, function(toggle) 
+    Settings.InfiniteJump = toggle
+end)
 
-        callback(Math.Lerp(start, _end, percent))
-    end
+Services.Input.InputBegan:Connect(function(input, ret)
+    if ret then return end
 
-    callback(_end)
-end
+    if input.KeyCode == Enum.KeyCode.Space then
+        while Services.Input:IsKeyDown(Enum.KeyCode.Space) do
+            if not lp.Character or not lp.Character:findFirstChild "Humanoid" then continue end
 
-for i,v in binds do
-    local bind = binds:add(i, v.Default, v.Toggle, v.Function)
-
-    binds:Toggle(i, true, function(toggled) 
-        if toggled then
-            return bind:remove()
+            lp.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
         end
 
-        bind = bind:add(i, v.Default, v.Toggle, v.Function)
-    end)
-end
+        return
+    end
+end)
+
+lp.CharacterAdded:Connect(function(character) 
+    local hrp, hum, backpack = character:waitForChild "HumanoidRootPart", character:waitForChild "Humanoid", lp:waitForChild "Backpack"
+
+    
+end)
