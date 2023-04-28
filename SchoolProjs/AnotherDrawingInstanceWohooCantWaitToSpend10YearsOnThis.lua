@@ -82,7 +82,9 @@ function Draw.new(Type)
     local properties = {
         Draggable = false,
         Parent = nil,
-        TheThugShaker = nil
+        TheThugShaker = nil,
+        Name = Type
     }
 
+    return setmetatable(properties, Draw)
 end
