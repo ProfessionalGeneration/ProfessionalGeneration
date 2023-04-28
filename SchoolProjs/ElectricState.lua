@@ -25,5 +25,6 @@ end)
 lp.CharacterAdded:Connect(function(character) 
     local hrp, hum, backpack = character:waitForChild "HumanoidRootPart", character:waitForChild "Humanoid", lp:waitForChild "Backpack"
 
-    
+
 end)
+
