@@ -26,12 +26,15 @@ end
 
 local Draw = {}
 Draw.__index = Draw
+Draw.__newindex = function(self, key, value)
+    
+end
 
 function Draw.Children(self, recursive)
     local children = {}
     
     for property, child in self do
-        if type(child) == "table" and property ~= "Parent" then
+        if type(child) == "table" and property ~= "Parent" and property ~= "Properties" then
             table.insert(children, child)
 
             if recursive then
@@ -101,14 +104,26 @@ function Draw.Find(self, name, recursive)
     end
 end
 
+function Draw.ChildrenOfType(self, type, recursive)
+    for property, child in self.__children do
+        if self.__properties.Type ~= type then continue end
+        table.insert(children, child)
+
+        if recursive then
+                for _, descendant in child:Children(true) do
+                table.insert(children, descendant)
+            end
+        end
+    end
+end
+
 function Draw.new(Type)
     local obj = Drawing.new(Type)
     local properties = {
         Draggable = false,
-        Parent = nil,
         Name = Type,
-        Object = obj
+        Class = Type,
     }
 
-    return setmetatable(properties, Draw)
+    return setmetatable({__properties = properties, __obj = obj, __children = {}, __parent = nil}, Draw)
 end
