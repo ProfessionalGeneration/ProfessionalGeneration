@@ -25,12 +25,18 @@ local function DeltaIter(start, _end, mult, callback)
     callback(_end)
 end
 
+local DraggableObjs = {}
+
 local Draw = {}
-Draw.__index = Draw
+Draw.__index = function(self, key)
+    return self.__properties[key] or self.__children[key] or error(`{key} is not a valid member of {self.Name}`)
+end
 Draw.__newindex = function(self, key, value)
     if key == "Parent" then
         if value then
             table.insert(self, value.__children)
+
+            Draw.__newindex(self, "Position", self.Position)
         end
 
         if self.__parent then
@@ -39,6 +45,40 @@ Draw.__newindex = function(self, key, value)
 
         self.__parent = value
     end
+
+    if key == "Draggable" then
+        table[value and "insert" or "remove"](DraggableObjs, value and self or table.find(DraggableObjs, self))
+    end
+
+    if key == "Position" then
+        if self.__properties.Parent then
+            local pos, parent = Vector2.zero, self.__properties.Parent
+
+            while true do
+                parent = parent.__properties.Parent
+
+                if parent then
+                    pos += parent.__properties.Position
+                else
+                    break
+                end
+            end
+        end
+
+        for _, descendant in self:Children(true) do
+            descendant.__object.Position = descendant.__object.Position - (self.__object.Position - descendant.__object.Position)
+        end
+
+        self.__properties[key] = value
+
+        return
+    end
+
+    if self.__object[key] then
+        self.__object[key] = value
+    end
+
+    self.__properties[key] = value
 end
 Draw.__tostring = function(self)
     return self.__properties.Name
@@ -101,7 +141,7 @@ function Draw.Destroy(self)
 end
 
 function Draw.Find(self, name, recursive)
-    for i,v in self:Children() do
+    for i,v in self.__children do
         if v.Name == name then
             return v
         end
@@ -131,7 +171,7 @@ function Draw.ChildrenOfClass(self, type, recursive)
 end
 
 function Draw.FindOfClass(self, type, recursive)
-    for i,v in self:Children() do
+    for i,v in self.__children do
         if v.Class == type then
             return v
         end
@@ -146,14 +186,16 @@ function Draw.FindOfClass(self, type, recursive)
     end
 end
 
-function Draw.new(Type)
+function Draw.new(Type, parent)
     local obj = Drawing.new(Type)
     local properties = {
         Draggable = false,
         Name = Type,
         Class = Type,
+        Parent = parent,
     }
-    local mt = setmetatable(properties, Draw)
 
-    return mt
+    return setmetatable({__properties = {}, __children = {}, __object = obj}, Draw)
 end
+
+return Draw
