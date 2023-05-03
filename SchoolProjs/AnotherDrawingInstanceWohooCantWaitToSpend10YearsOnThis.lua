@@ -1,3 +1,4 @@
+-- commit info goes hard frfr :3
 local Services = {
     Input = cloneref(game:service "UserInputService"),
     Core = cloneref(game:service "CoreGui"),
@@ -27,20 +28,31 @@ end
 local Draw = {}
 Draw.__index = Draw
 Draw.__newindex = function(self, key, value)
-    
+    if key == "Parent" then
+        if value then
+            table.insert(self, value.__children)
+        end
+
+        if self.__parent then
+            table.remove(self.__parent, table.find(self.__parent, self))
+        end
+
+        self.__parent = value
+    end
+end
+Draw.__tostring = function(self)
+    return self.__properties.Name
 end
 
 function Draw.Children(self, recursive)
     local children = {}
     
-    for property, child in self do
-        if type(child) == "table" and property ~= "Parent" and property ~= "Properties" then
-            table.insert(children, child)
+    for property, child in self.__children do
+        table.insert(children, child)
 
-            if recursive then
-                for _, descendant in child:Children(true) do
-                    table.insert(children, descendant)
-                end
+        if recursive then
+            for _, descendant in child.__children do
+                table.insert(children, descendant)
             end
         end
     end
@@ -104,14 +116,31 @@ function Draw.Find(self, name, recursive)
     end
 end
 
-function Draw.ChildrenOfType(self, type, recursive)
+function Draw.ChildrenOfClass(self, type, recursive)
     for property, child in self.__children do
-        if self.__properties.Type ~= type then continue end
+        if self.__properties.Class ~= type then continue end
         table.insert(children, child)
 
         if recursive then
-                for _, descendant in child:Children(true) do
+            for _, descendant in child.__children do
+                if self.__properties.Class ~= type then continue end
                 table.insert(children, descendant)
+            end
+        end
+    end
+end
+
+function Draw.FindOfClass(self, type, recursive)
+    for i,v in self:Children() do
+        if v.Class == type then
+            return v
+        end
+    end
+
+    if recursive then
+        for i,v in self:Children(true) do
+            if v.Class == type then
+                return v
             end
         end
     end
@@ -124,6 +153,7 @@ function Draw.new(Type)
         Name = Type,
         Class = Type,
     }
+    local mt = setmetatable(properties, Draw)
 
-    return setmetatable({__properties = properties, __obj = obj, __children = {}, __parent = nil}, Draw)
+    return mt
 end
