@@ -25,11 +25,23 @@ local function DeltaIter(start, _end, mult, callback)
     callback(_end)
 end
 
-local DraggableObjs = {}
+local DraggableObjs = {} do
+    local Connection
 
+    Services.Input.InputBegan:Connect(function(input, ret)
+        if input.UserInputType == Enum.UserInputType.MouseBUtton1 then
+            for _, frame in DraggableObjs do
+                if 
+            end
+        end
+    end)
+end
+
+local ScrollableObjs = {}
 local Draw = {}
+
 Draw.__index = function(self, key)
-    return self.__properties[key] or self.__children[key] or error(`{key} is not a valid member of {self.Name}`)
+    return Draw[key] or self.__properties[key] or self.__children[key] or error(`{key} is not a valid member of {self.Name}`)
 end
 Draw.__newindex = function(self, key, value)
     if key == "Parent" then
@@ -47,6 +59,7 @@ Draw.__newindex = function(self, key, value)
     end
 
     if key == "Draggable" then
+        if not value and not table.find(DraggableObjs, self) then return end
         table[value and "insert" or "remove"](DraggableObjs, value and self or table.find(DraggableObjs, self))
     end
 
@@ -54,24 +67,28 @@ Draw.__newindex = function(self, key, value)
         if self.__properties.Parent then
             local pos, parent = Vector2.zero, self.__properties.Parent
 
-            while true do
+            while parent do
                 parent = parent.__properties.Parent
 
                 if parent then
                     pos += parent.__properties.Position
-                else
-                    break
                 end
             end
         end
 
         for _, descendant in self:Children(true) do
-            descendant.__object.Position = descendant.__object.Position - (self.__object.Position - descendant.__object.Position)
+            descendant.__object.Position = descendant.__object.Position + (self.__object.Position - descendant.__object.Position)
         end
 
         self.__properties[key] = value
 
         return
+    end
+
+    if key == "Visible" then
+        for _, descendant in self:Children(true) do
+            descendant.__object.Visible = descendant.Visible and value or false
+        end
     end
 
     if self.__object[key] then
@@ -107,7 +124,7 @@ function Draw.Tween(self, tweeninfo, properties)
         startprops[i] = self[i]
     end
 
-    if tweeninfo.DelayTime or tweeninfo.delayTime then -- no fucking clue why roblox has this they clearly havent heard of "task.delay"
+    if tweeninfo.DelayTime or tweeninfo.delayTime then -- i get most roblox devs are incompetent but delay(time, func, ...) exists?? 
         task.wait(tweeninfo.DelayTime or tweeninfo.delayTime)
     end
 
@@ -138,6 +155,14 @@ function Draw.Destroy(self)
     for i,v in self:Children(true) do
         v.Object:Destroy()
     end
+end
+
+function Draw.MouseInFrame(self)
+    local Mouse = Services.Input:GetMouseLocation()
+    local Pos = self.__object.Position or self.__object.PointB 
+    local Size = typeof(frame.Size) == "Vector2" and frame.Size or frame.TextBounds
+
+    return Pos.Y < Mouse.Y and Mouse.Y < Pos.Y + Size.Y and Pos.X < Mouse.X and Mouse.X < Pos.X + Size.X
 end
 
 function Draw.Find(self, name, recursive)
@@ -186,16 +211,26 @@ function Draw.FindOfClass(self, type, recursive)
     end
 end
 
-function Draw.new(Type, parent)
+function Draw.SetAttribute(self, key, value)
+    self.__attributes[key] = value
+end
+
+function Draw.GetAttribute(self, key)
+    return self.__attributes[key]
+end
+
+function Draw:new(Type, parent)
     local obj = Drawing.new(Type)
     local properties = {
         Draggable = false,
+        Scrollable = false,
+        IgnoreScrolling = false
         Name = Type,
         Class = Type,
         Parent = parent,
     }
 
-    return setmetatable({__properties = {}, __children = {}, __object = obj}, Draw)
+    return setmetatable({__properties = {}, __children = {}, __object = obj, __attributes = {}}, Draw)
 end
 
 return Draw
