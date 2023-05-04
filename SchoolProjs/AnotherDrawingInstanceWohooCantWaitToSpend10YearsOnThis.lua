@@ -51,11 +51,11 @@ Draw.__newindex = function(self, key, value)
             Draw.__newindex(self, "Position", self.Position)
         end
 
-        if self.__parent then
-            table.remove(self.__parent, table.find(self.__parent, self))
+        if self.__properties.Parent then
+            table.remove(self.__properties.Parent, table.find(self.__properties.Parent, self))
         end
 
-        self.__parent = value
+        self.__properties.Parent = value
     end
 
     if key == "Draggable" then
