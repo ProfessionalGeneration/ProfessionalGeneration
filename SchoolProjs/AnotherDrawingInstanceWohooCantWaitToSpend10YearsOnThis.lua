@@ -31,7 +31,30 @@ local DraggableObjs = {} do
     Services.Input.InputBegan:Connect(function(input, ret)
         if input.UserInputType == Enum.UserInputType.MouseBUtton1 then
             for _, frame in DraggableObjs do
-                if 
+                if frame:MouseInFrame() and frame.Visible and frame.Opacity ~= 0 then
+                    local _continue
+
+                    for __, descendant in frame:Children(true) do
+                        if (_v.Active and descendant:IsInFrame() and _v.Opacity ~= 0 and _v.Visible and frame.__object.Main.ZIndex <= descendant.__object.Main.ZIndex) then
+                            _continue = true
+
+                            break
+                        end
+                    end
+
+                    if _continue then continue end
+
+                    if Connection then
+                        Connection:Disconnect()
+                    end
+
+                    local mp = Services.Input:GetMouseLocation()
+                    local offset = (v.Parent and v.__object.Position - mp or mp) - v.Position
+
+                    Connection = Services.Input.InputChanged:Connect(function() 
+                        frame.Position = (frame.Parent and frame.Parent.Position or Vector2.zero) + mp - offset
+                    end)
+                end
             end
         end
     end)
@@ -64,15 +87,13 @@ Draw.__newindex = function(self, key, value)
     end
 
     if key == "Position" then
-        if self.__properties.Parent then
-            local pos, parent = Vector2.zero, self.__properties.Parent
+        local pos, parent = Vector2.zero, self.__properties.Parent
 
-            while parent do
-                parent = parent.__properties.Parent
+        while parent do
+            parent = parent.__properties.Parent
 
-                if parent then
-                    pos += parent.__properties.Position
-                end
+            if parent then
+                pos += parent.__properties.Position
             end
         end
 
@@ -80,6 +101,23 @@ Draw.__newindex = function(self, key, value)
             descendant.__object.Position = descendant.__object.Position + (self.__object.Position - descendant.__object.Position)
         end
 
+        self.__properties[key] = value
+
+        return
+    end
+
+    if key == "ZIndex" then
+        local zindex, parent = self.__properties.ZIndex, self.__properties.Parent
+
+        while parent do
+            parent = parent.__properties.Parent
+
+            if parent then
+                zindex += parent.__properties.ZIndex
+            end
+        end
+
+        self.__object.ZIndex = zindex
         self.__properties[key] = value
 
         return
@@ -228,6 +266,11 @@ function Draw:new(Type, parent)
         Name = Type,
         Class = Type,
         Parent = parent,
+        -- Defaualt properties
+        Visible = true,
+        Opacity = 1,
+        ZIndex = 0,
+        Color = Color3.new(1, 1, 1),
     }
 
     return setmetatable({__properties = {}, __children = {}, __object = obj, __attributes = {}}, Draw)
