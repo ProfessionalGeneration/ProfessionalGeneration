@@ -1,6 +1,4 @@
 -- commit info goes hard frfr :3
--- ok so now it time to add connections.
--- i fucking love making thsoe yea,,,,,,,,,,
 
 local Services = {
     Input = cloneref(game:service "UserInputService"),
@@ -44,7 +42,7 @@ local DraggableObjs = {} do
     local Connection
 
     Services.Input.InputBegan:Connect(function(input, ret)
-        if input.UserInputType == Enum.UserInputType.MouseBUtton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
             for _, frame in DraggableObjs do
                 if frame:MouseInFrame() and frame.Visible and frame.Opacity ~= 0 then
                     local _continue
@@ -112,7 +110,7 @@ end
 local Draw = {}
 
 Draw.__index = function(self, key)
-    return Draw[key] or self.__properties[key] or self.__children[key] or error(`{key} is not a valid member of {self.Name}`)
+    return Draw[key] or self.__properties[key] or self.__children[key] or (self.__connections[key] and self.__connections[key].Event) or error(`{key} is not a valid member of {self.Name}`)
 end
 Draw.__newindex = function(self, key, value)
     if key == "Parent" then
@@ -307,14 +305,56 @@ end
 
 local function GetDefaultConnections(obj)
     local cons = {}
+    local inframe
 
     cons.Button1Down = Instance.new "BindableEvent"
+    cons.Button2Down = Instance.new "BindableEvent"
+    cons.Button1Up = Instance.new "BindableEvent"
     cons.Button2Down = Instance.new "BindableEvent"
     cons.MouseEnter = Instance.new "BindableEvent"
     cons.MouseLeave = Instance.new "BindableEvent"
 
     Services.Input.InputBegan:Connect(function(input, ret)
-        if ret or not obj.__properties.Active then return end
+        if ret or not obj.__properties.Active or not obj.__object.Visible or obj.__object.Opacity == 0 or not obj:MouseInFrame() then return end
+        local mp = Services.Input:GetMouseLocation()
+
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            cons.Button1Down:Fire(mp)
+            while true do
+                if Services.Input.InputLost:Wait().UserInputType == Enum.UserInputType.MouseButton1 then
+                    break
+                end
+            end
+            cons.Button1Up:Fire(Services.Input:GetMouseLocation())
+
+            return
+        end
+
+        if input.UserInputType == Enum.UserInputType.MouseButton2 then
+            cons.Button2Down:Fire(mp)
+            while true do
+                if Services.Input.InputLost:Wait().UserInputType == Enum.UserInputType.MouseButton2 then
+                    break
+                end
+            end
+            cons.Button2Up:Fire(Services.Input:GetMouseLocation())
+        end
+    end)
+
+    Services.Input.InputChanged:Connect(function(input)
+        if input.UserInputType ~= Enum.UserInputType.MouseMovement or not obj.__properties.Active or not obj.__object.Visible or obj.__object.Opacity == 0 or not obj:MouseInFrame() then return end
+
+        if inframe and not obj:MouseInFrame() then
+            inframe = false
+            cons.MouseLeave:Fire()
+
+            return
+        end
+
+        if not inframe and obj:MouseInFrame() then
+            inframe = true
+            cons.MouseEnter:Fire()
+        end
     end)
 
     return cons
