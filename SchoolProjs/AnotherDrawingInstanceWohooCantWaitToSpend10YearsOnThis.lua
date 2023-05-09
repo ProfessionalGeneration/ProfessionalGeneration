@@ -1,4 +1,7 @@
 -- commit info goes hard frfr :3
+-- ok so now it time to add connections.
+-- i fucking love making thsoe yea,,,,,,,,,,
+
 local Services = {
     Input = cloneref(game:service "UserInputService"),
     Core = cloneref(game:service "CoreGui"),
