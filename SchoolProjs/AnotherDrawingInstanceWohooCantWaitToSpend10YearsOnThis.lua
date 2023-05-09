@@ -6,6 +6,14 @@ local Services = {
     Tween = cloneref(game:service "TweenService")
 }
 
+local Easing = {} do
+    Easing.Out = {} do
+        Easing.Out.Quad = function(x) -- main easing for scrolling
+            return 1 - math.pow(1 - x, 4)
+        end
+    end
+end
+
 local function DeltaIter(start, _end, mult, callback)
     local up
 
@@ -25,6 +33,10 @@ local function DeltaIter(start, _end, mult, callback)
     callback(_end)
 end
 
+local function Lerp(a, b, c)
+    return a + c * (b - a)
+end
+
 local DraggableObjs = {} do
     local Connection
 
@@ -35,7 +47,7 @@ local DraggableObjs = {} do
                     local _continue
 
                     for __, descendant in frame:Children(true) do
-                        if (_v.Active and descendant:IsInFrame() and _v.Opacity ~= 0 and _v.Visible and frame.__object.Main.ZIndex <= descendant.__object.Main.ZIndex) then
+                        if (descendant.Active and descendant:IsInFrame() and descendant.Opacity ~= 0 and descendant.__object.Visible and frame.__object.Main.ZIndex <= descendant.__object.Main.ZIndex) then
                             _continue = true
 
                             break
@@ -60,7 +72,40 @@ local DraggableObjs = {} do
     end)
 end
 
-local ScrollableObjs = {}
+local ScrollableObjs = {} do
+    Services.Input.InputChanged:Connect(function(input, ret)
+        if ret then return end
+
+        if input.UserInputType == Enum.UserInputType.MouseWheel then
+            local up = input.Position.Z > 0
+
+            for _, frame in ScrollableObjs do
+                if frame.__scrolling.YPosition <= 0 and not up then continue end
+                if frame.__scrolling.YPosition >= frame.__properties.ScrollSize and up then continue end
+                local samount, ypos = frame.__properties.ScrollAmount, frame.__scrolling.YPosition
+
+                if frame:MouseInFrame() and frame.Visible and frame.Opacity ~= 0 then
+                    DeltaIter(up and 0 or 1, up and 1 or 0, 50, function(inc)
+                        for i,v in frame:Children(true) do
+                            if v.__properties.IgnoreScrolling then continue end
+
+                            if v.Class == "Line" then
+                                v.__object.To = Vector2.new(v.__object.To.X, frame.Position.Y + v.To.Y + Lerp(ypos, ypos + samount, Easing.Out.Quad(inc)))
+                                v.__object.From = Vector2.new(v.__object.from.X, frame.Position.Y + v.From.Y + Lerp(ypos, ypos + samount, Easing.Out.Quad(inc)))
+                            
+                                continue
+                            end
+
+                            v.__object.Position = Vector2.new(v.__object.Position.X, frame.Position.Y + v.Y + Lerp(ypos, ypos + samount, Easing.Out.Quad(inc)))
+                        end
+                    end)
+
+                    frame.__scrolling.YPosition += (up and 1 or -1) * frame.ScrollAmount
+                end
+            end
+        end
+    end)
+end
 local Draw = {}
 
 Draw.__index = function(self, key)
@@ -262,10 +307,13 @@ function Draw:new(Type, parent)
     local properties = {
         Draggable = false,
         Scrollable = false,
-        IgnoreScrolling = false
+        IgnoreScrolling = false,
+        ScrollSize = 200,
+        ScrollAmount = 20
         Name = Type,
         Class = Type,
         Parent = parent,
+        Active = false,
         -- Defaualt properties
         Visible = true,
         Opacity = 1,
@@ -273,7 +321,9 @@ function Draw:new(Type, parent)
         Color = Color3.new(1, 1, 1),
     }
 
-    return setmetatable({__properties = {}, __children = {}, __object = obj, __attributes = {}}, Draw)
+    return setmetatable({__properties = {}, __children = {}, __object = obj, __attributes = {}, __scrolling = {
+        YPosition = 0
+    }}, Draw)
 end
 
 return Draw
