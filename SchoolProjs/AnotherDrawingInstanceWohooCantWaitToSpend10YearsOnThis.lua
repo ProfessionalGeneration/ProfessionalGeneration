@@ -305,6 +305,21 @@ function Draw.GetAttribute(self, key)
     return self.__attributes[key]
 end
 
+local function GetDefaultConnections(obj)
+    local cons = {}
+
+    cons.Button1Down = Instance.new "BindableEvent"
+    cons.Button2Down = Instance.new "BindableEvent"
+    cons.MouseEnter = Instance.new "BindableEvent"
+    cons.MouseLeave = Instance.new "BindableEvent"
+
+    Services.Input.InputBegan:Connect(function(input, ret)
+        if ret or not obj.__properties.Active then return end
+    end)
+
+    return cons
+end
+
 function Draw:new(Type, parent)
     local obj = Drawing.new(Type)
     local properties = {
@@ -324,9 +339,15 @@ function Draw:new(Type, parent)
         Color = Color3.new(1, 1, 1),
     }
 
-    return setmetatable({__properties = {}, __children = {}, __object = obj, __attributes = {}, __scrolling = {
+    local mt = setmetatable({__properties = {}, __children = {}, __object = obj, __attributes = {}, __connections = {}, __scrolling = {
         YPosition = 0
     }}, Draw)
+
+    for i,v in GetDefaultConnections(mt) do
+        __connections[i] = v
+    end
+
+    return mt
 end
 
 return Draw
