@@ -62,9 +62,9 @@ local DraggableObjs = {} do
                     end
 
                     local mp = Services.Input:GetMouseLocation()
-                    local offset = (v.Parent and v.__object.Position - mp or mp) - v.Position
+                    local offset = (frame.Parent and frame.__object.Position - mp or mp) - frame.Position
 
-                    Connection = Services.Input.InputChanged:Connect(function() 
+                    Connection = Services.Input.InputChanged:Connect(function()
                         frame.Position = (frame.Parent and frame.Parent.Position or Vector2.zero) + mp - offset
                     end)
                 end
@@ -73,7 +73,9 @@ local DraggableObjs = {} do
     end)
 end
 
-local ScrollableObjs = {} do
+local ScrollableObjs = setmetatable({}, {__newindex = function(self, key, value)
+    
+end}) do
     Services.Input.InputChanged:Connect(function(input, ret)
         if ret then return end
 
@@ -93,7 +95,7 @@ local ScrollableObjs = {} do
                             if v.Class == "Line" then
                                 v.__object.To = Vector2.new(v.__object.To.X, frame.Position.Y + v.To.Y + Lerp(ypos, ypos + samount, Easing.Out.Quad(inc)))
                                 v.__object.From = Vector2.new(v.__object.from.X, frame.Position.Y + v.From.Y + Lerp(ypos, ypos + samount, Easing.Out.Quad(inc)))
-                            
+
                                 continue
                             end
 
@@ -107,6 +109,7 @@ local ScrollableObjs = {} do
         end
     end)
 end
+
 local Draw = {}
 
 Draw.__index = function(self, key)
@@ -130,6 +133,14 @@ Draw.__newindex = function(self, key, value)
     if key == "Draggable" then
         if not value and not table.find(DraggableObjs, self) then return end
         table[value and "insert" or "remove"](DraggableObjs, value and self or table.find(DraggableObjs, self))
+    end
+
+    if key == "Scrollable" then
+        if not value and not ScrollableObjs[self] then return end
+        ScrollableObjs[self] = value and {
+            DrawFill = Drawing.new "Square", -- this will most likely get gc'd if u dont mention scrolling at all (which is good)
+            DrawOutline = Drawing.new "Square"
+        } or nil
     end
 
     if key == "Position" then
@@ -187,8 +198,8 @@ end
 
 function Draw.Children(self, recursive)
     local children = {}
-    
-    for property, child in self.__children do
+
+    for idx, child in self.__children do
         table.insert(children, child)
 
         if recursive then
@@ -244,7 +255,7 @@ end
 function Draw.MouseInFrame(self)
     local Mouse = Services.Input:GetMouseLocation()
     local Pos = self.__object.Position or self.__object.PointB 
-    local Size = typeof(frame.Size) == "Vector2" and frame.Size or frame.TextBounds
+    local Size = typeof(self.__object.Size) == "Vector2" and self.__object.Size or self.__object.TextBounds
 
     return Pos.Y < Mouse.Y and Mouse.Y < Pos.Y + Size.Y and Pos.X < Mouse.X and Mouse.X < Pos.X + Size.X
 end
@@ -266,7 +277,9 @@ function Draw.Find(self, name, recursive)
 end
 
 function Draw.ChildrenOfClass(self, type, recursive)
-    for property, child in self.__children do
+    local children = {}
+
+    for idx, child in self.__children do
         if self.__properties.Class ~= type then continue end
         table.insert(children, child)
 
@@ -277,6 +290,8 @@ function Draw.ChildrenOfClass(self, type, recursive)
             end
         end
     end
+
+    return children
 end
 
 function Draw.FindOfClass(self, type, recursive)
@@ -303,6 +318,16 @@ function Draw.GetAttribute(self, key)
     return self.__attributes[key]
 end
 
+function Draw.Set(self, idx, idx2, val)
+    if idx == "object" then
+        self.__object[idx] = idx2
+
+        return
+    end
+
+    self[`__{idx}`][idx2] = val
+end
+
 local function GetDefaultConnections(obj)
     local cons = {}
     local inframe
@@ -320,11 +345,7 @@ local function GetDefaultConnections(obj)
 
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             cons.Button1Down:Fire(mp)
-            while true do
-                if Services.Input.InputLost:Wait().UserInputType == Enum.UserInputType.MouseButton1 then
-                    break
-                end
-            end
+            while Services.Input.InputLost:Wait().UserInputType ~= Enum.UserInputType.MouseButton1 do end
             cons.Button1Up:Fire(Services.Input:GetMouseLocation())
 
             return
@@ -332,11 +353,7 @@ local function GetDefaultConnections(obj)
 
         if input.UserInputType == Enum.UserInputType.MouseButton2 then
             cons.Button2Down:Fire(mp)
-            while true do
-                if Services.Input.InputLost:Wait().UserInputType == Enum.UserInputType.MouseButton2 then
-                    break
-                end
-            end
+            while Services.Input.InputLost:Wait().UserInputType ~= Enum.UserInputType.MouseButton2 do end
             cons.Button2Up:Fire(Services.Input:GetMouseLocation())
         end
     end)
@@ -363,11 +380,15 @@ end
 function Draw:new(Type, parent)
     local obj = Drawing.new(Type)
     local properties = {
+        -- Dragging
         Draggable = false,
+        -- Scrolling
         Scrollable = false,
         IgnoreScrolling = false,
         ScrollSize = 200,
-        ScrollAmount = 20
+        ScrollAmount = 20,
+        ScrollBarThickness = 4,
+        -- Universal
         Name = Type,
         Class = Type,
         Parent = parent,
@@ -379,12 +400,49 @@ function Draw:new(Type, parent)
         Color = Color3.new(1, 1, 1),
     }
 
-    local mt = setmetatable({__properties = {}, __children = {}, __object = obj, __attributes = {}, __connections = {}, __scrolling = {
-        YPosition = 0
+    local mt = setmetatable({__properties = properties, __children = {}, __object = obj, __attributes = {}, __connections = {}, __scrolling = {
+        YPosition = 0,
     }}, Draw)
 
     for i,v in GetDefaultConnections(mt) do
-        __connections[i] = v
+        mt.__connections[i] = v
+    end
+
+    if Type == "Line" then
+        properties["To"] = Vector2.zero
+        properties["From"] = Vector2.zero
+    end
+
+    if Type == "Image" then
+        properties["Rounding"] = 0
+        properties["Size"] = Vector2.new(200, 200)
+        properties["Position"] = Vector2.zero
+        properties["Data"] = ""
+    end
+
+    if Type == "Text" then
+        properties["Text"] = ""
+        properties["Size"] = 18
+        properties["Centered"] = false
+        properties["Outlined"] = true
+        properties["OutlineColor"] = Color3.new()
+        properties["Position"] = Vector2.zero
+        properties["Font"] = Drawing.Fonts["Monospace"]
+    end
+
+    if Type == "Square" then
+        properties["Position"] = Vector2.zero
+        properties["Size"] = Vector2.new(200, 200)
+        properties["Thickness"] = 2
+        properties["Filled"] = true
+    end
+
+    if Type == "Circle" then
+        properties["Radius"] = 20
+        properties["Position"] = Vector2.zero
+        properties["NumSides"] = 150
+        properties["Filled"] = false
+        properties["Thickness"] = 2
     end
 
     return mt
