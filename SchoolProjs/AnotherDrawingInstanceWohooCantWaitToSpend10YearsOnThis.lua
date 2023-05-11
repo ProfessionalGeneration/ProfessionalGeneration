@@ -229,7 +229,56 @@ local DraggableObjs = {} do
 end
 
 local ScrollableObjs = setmetatable({}, {__newindex = function(self, key, value)
-    
+    if key.__properties.ScrollBarThickness ~= 0 then
+        local interrupttween
+        
+        key.MouseEnter:Connect(function()
+            interrupttween = false
+            local localinterrupttween = false
+
+            DeltaIter(0, 1, 50, function(inc)
+                if interrupttween or localinterrupttween then 
+                    localinterrupttween = true
+                    return
+                end
+                inc = Easing.Out.Quad(inc)
+                value.DrawFill.Opacity = inc
+                value.DrawOutline.Opacity = inc
+            end)
+        end)
+
+        key.MouseLeave:Connect(function()
+            interrupttween = true
+
+            DeltaIter(1, 0, 50, function(inc)
+                inc = Easing.Out.Quad(inc)
+                value.DrawFill.Opacity = inc
+                value.DrawOutline.Opacity = inc
+            end)
+
+            interrupttween = false
+        end)
+    end
+
+    local connection = key.Changed:Connect(function()
+        value.DrawFill.Filled = true -- kms
+        value.DrawFill.Color = key.__properties.ScrollbarColor
+        value.DrawFill.Size = Vector2.new(key.__properties.ScrollBarThickness, 8 - (key.__object.Size.Y / key.ScrollSize))
+        value.DrawFill.Position = key.__object.Position + Vector2.new(key.__object.Size.X - 4 - key.__properties.ScrollBarThickness, 4)
+        value.DrawFill.ZIndex = key.__object.ZIndex + 1
+        value.DrawFill.Visible = true
+        value.DrawFill.Opacity = 0
+
+        value.DrawOutline.Color = key.__properties.ScrollbarOutlineColor
+        value.DrawOutline.Size = value.DrawFill.Size + Vector2.new(2, 2)
+        value.DrawOutline.Position = value.DrawFill.Position - Vector2.new(1, 1)
+        value.DrawOutline.Thickness = 2
+        value.DrawOutline.ZIndex = value.DrawFill.ZIndex
+        value.DrawOutline.Visible = true
+        value.DrawOutline.Opacity = 0
+    end)
+
+    rawset(self, key, value)
 end}) do
     Services.Input.InputChanged:Connect(function(input, ret)
         if ret then return end
@@ -246,15 +295,16 @@ end}) do
                     DeltaIter(up and 0 or 1, up and 1 or 0, 50, function(inc)
                         for i,v in frame:Children(true) do
                             if v.__properties.IgnoreScrolling then continue end
+                            inc = Easing.Out.Quad(inc)
 
                             if v.Class == "Line" then
-                                v.__object.To = Vector2.new(v.__object.To.X, frame.Position.Y + v.To.Y + Lerp(ypos, ypos + samount, Easing.Out.Quad(inc)))
-                                v.__object.From = Vector2.new(v.__object.from.X, frame.Position.Y + v.From.Y + Lerp(ypos, ypos + samount, Easing.Out.Quad(inc)))
+                                v.__object.To = Vector2.new(v.__object.To.X, frame.Position.Y + v.To.Y + Lerp(ypos, ypos + samount, inc))
+                                v.__object.From = Vector2.new(v.__object.from.X, frame.Position.Y + v.From.Y + Lerp(ypos, ypos + samount, inc))
 
                                 continue
                             end
 
-                            v.__object.Position = Vector2.new(v.__object.Position.X, frame.Position.Y + v.Y + Lerp(ypos, ypos + samount, Easing.Out.Quad(inc)))
+                            v.__object.Position = Vector2.new(v.__object.Position.X, frame.Position.Y + v.Y + Lerp(ypos, ypos + samount, inc))
                         end
                     end)
 
@@ -271,6 +321,8 @@ Draw.__index = function(self, key)
     return Draw[key] or self.__properties[key] or self.__children[key] or (self.__connections[key] and self.__connections[key].Event) or error(`{key} is not a valid member of {self.Name}`)
 end
 Draw.__newindex = function(self, key, value)
+    self.__connections.Changed:Fire(key, value)
+
     if key == "Parent" then
         if value then
             table.insert(self, value.__children)
@@ -493,6 +545,7 @@ local function GetDefaultConnections(obj)
     cons.Button2Down = Instance.new "BindableEvent"
     cons.MouseEnter = Instance.new "BindableEvent"
     cons.MouseLeave = Instance.new "BindableEvent"
+    cons.Changed = Instance.new "BindableEvent"
 
     Services.Input.InputBegan:Connect(function(input, ret)
         if ret or not obj.__properties.Active or not obj.__object.Visible or obj.__object.Opacity == 0 or not obj:MouseInFrame() then return end
@@ -542,7 +595,9 @@ function Draw:new(Type, parent)
         IgnoreScrolling = false,
         ScrollSize = 200,
         ScrollAmount = 20,
+        ScrollbarColor = Color3.new(1, 1, 1)
         ScrollBarThickness = 4,
+        ScrollbarOutlineColor = Color3.new(.1, .1, .1)
         -- Universal
         Name = Type,
         Class = Type,
