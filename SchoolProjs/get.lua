@@ -26,3 +26,5 @@ function funcs:Get(directory)
 
     return getfuncs
 end
+
+return funcs
