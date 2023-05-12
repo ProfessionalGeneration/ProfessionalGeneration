@@ -18,6 +18,10 @@ function funcs:Get(directory)
         return readfile(files[`Progen/{directory}/{file}`])
     end
 
+    function getfuncs:List()
+        return files
+    end
+
     function getfuncs:Write(file, contents)
         local err, suc = pcall(writefile, files[`Progen/{directory}/{file}`], contents)
 
