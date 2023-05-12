@@ -266,7 +266,7 @@ local ScrollableObjs = setmetatable({}, {__newindex = function(self, key, value)
         value.DrawFill.Size = Vector2.new(key.__properties.ScrollBarThickness, 8 - (key.__object.Size.Y / key.ScrollSize))
         value.DrawFill.Position = key.__object.Position + Vector2.new(key.__object.Size.X - 4 - key.__properties.ScrollBarThickness, 4)
         value.DrawFill.ZIndex = key.__object.ZIndex + 1
-        value.DrawFill.Visible = true
+        value.DrawFill.Visible = key.__properties.ScrollBarThickness ~= 0
         value.DrawFill.Opacity = 0
 
         value.DrawOutline.Color = key.__properties.ScrollbarOutlineColor
@@ -274,7 +274,7 @@ local ScrollableObjs = setmetatable({}, {__newindex = function(self, key, value)
         value.DrawOutline.Position = value.DrawFill.Position - Vector2.new(1, 1)
         value.DrawOutline.Thickness = 2
         value.DrawOutline.ZIndex = value.DrawFill.ZIndex
-        value.DrawOutline.Visible = true
+        value.DrawOutline.Visible = key.__properties.ScrollBarThickness ~= 0
         value.DrawOutline.Opacity = 0
     end)
 
@@ -286,16 +286,18 @@ end}) do
         if input.UserInputType == Enum.UserInputType.MouseWheel then
             local up = input.Position.Z > 0
 
-            for _, frame in ScrollableObjs do
+            for frame, scrollbar in ScrollableObjs do
                 if frame.__scrolling.YPosition <= 0 and not up then continue end
                 if frame.__scrolling.YPosition >= frame.__properties.ScrollSize and up then continue end
                 local samount, ypos = frame.__properties.ScrollAmount, frame.__scrolling.YPosition
+                frame.__scrolling.YPosition += (up and 1 or -1) * frame.ScrollAmount
 
                 if frame:MouseInFrame() and frame.Visible and frame.Opacity ~= 0 then
                     DeltaIter(up and 0 or 1, up and 1 or 0, 50, function(inc)
+                        inc = Easing.Out.Quad(inc)
+
                         for i,v in frame:Children(true) do
                             if v.__properties.IgnoreScrolling then continue end
-                            inc = Easing.Out.Quad(inc)
 
                             if v.Class == "Line" then
                                 v.__object.To = Vector2.new(v.__object.To.X, frame.Position.Y + v.To.Y + Lerp(ypos, ypos + samount, inc))
@@ -305,10 +307,14 @@ end}) do
                             end
 
                             v.__object.Position = Vector2.new(v.__object.Position.X, frame.Position.Y + v.Y + Lerp(ypos, ypos + samount, inc))
+                        
+                            if v.__object.Position.Y + v.__object.Size.Y > frame.__object.Position.Y + frame.__object.Size.Y - 2 or v.__object.Position.Y < frame.__object.Position.Y + 2 then
+                                v.__object.Visible = false
+                            end
                         end
-                    end)
 
-                    frame.__scrolling.YPosition += (up and 1 or -1) * frame.ScrollAmount
+                        scrollbar.DrawFill.Position = key.__object.Position + Vector2.new(key.__object.Size.X - 4 - key.__properties.ScrollBarThickness, 4) + Vector2.new(0, Lerp(0, frame.__object.Size.Y - 6 - scrollbar.DrawFill.Size.Y, ypos / frame.__properties.ScrollSize))
+                    end)
                 end
             end
         end
