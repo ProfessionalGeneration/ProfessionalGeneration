@@ -269,7 +269,7 @@ local ScrollableObjs = setmetatable({}, {__newindex = function(self, key, value)
         value.DrawFill.Visible = key.__properties.ScrollBarThickness ~= 0
         value.DrawFill.Opacity = 0
 
-        value.DrawOutline.Color = key.__properties.ScrollbarOutlineColor
+        value.DrawOutline.Color = key.__properties.ScrollbarOutlineColor -- kms v2
         value.DrawOutline.Size = value.DrawFill.Size + Vector2.new(2, 2)
         value.DrawOutline.Position = value.DrawFill.Position - Vector2.new(1, 1)
         value.DrawOutline.Thickness = 2
