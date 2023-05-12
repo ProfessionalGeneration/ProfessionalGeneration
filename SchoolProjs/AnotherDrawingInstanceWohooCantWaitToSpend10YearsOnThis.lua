@@ -230,14 +230,14 @@ end
 
 local ScrollableObjs = setmetatable({}, {__newindex = function(self, key, value)
     if key.__properties.ScrollBarThickness ~= 0 then
-        local interrupttween
+        local t1, t2
         
         key.MouseEnter:Connect(function()
-            interrupttween = false
+            t1 = true
             local localinterrupttween = false
 
             DeltaIter(0, 1, 50, function(inc)
-                if interrupttween or localinterrupttween then 
+                if t2 or localinterrupttween then 
                     localinterrupttween = true
                     return
                 end
@@ -245,18 +245,25 @@ local ScrollableObjs = setmetatable({}, {__newindex = function(self, key, value)
                 value.DrawFill.Opacity = inc
                 value.DrawOutline.Opacity = inc
             end)
+
+            t1 = false
         end)
 
         key.MouseLeave:Connect(function()
-            interrupttween = true
+            t2 = true
+            local localinterrupttween = false
 
             DeltaIter(1, 0, 50, function(inc)
+                if t1 or localinterrupttween then 
+                    localinterrupttween = true
+                    return
+                end
                 inc = Easing.Out.Quad(inc)
                 value.DrawFill.Opacity = inc
                 value.DrawOutline.Opacity = inc
             end)
 
-            interrupttween = false
+            t2 = false
         end)
     end
 
@@ -269,7 +276,7 @@ local ScrollableObjs = setmetatable({}, {__newindex = function(self, key, value)
         value.DrawFill.Visible = key.__properties.ScrollBarThickness ~= 0
         value.DrawFill.Opacity = 0
 
-        value.DrawOutline.Color = key.__properties.ScrollbarOutlineColor -- kms v2
+        value.DrawOutline.Color = key.__properties.ScrollbarOutlineColor
         value.DrawOutline.Size = value.DrawFill.Size + Vector2.new(2, 2)
         value.DrawOutline.Position = value.DrawFill.Position - Vector2.new(1, 1)
         value.DrawOutline.Thickness = 2
