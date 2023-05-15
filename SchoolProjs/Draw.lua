@@ -231,13 +231,13 @@ end
 local ScrollableObjs = setmetatable({}, {__newindex = function(self, key, value)
     if key.__properties.ScrollBarThickness ~= 0 then
         local t1, t2
-        
+
         key.MouseEnter:Connect(function()
             t1 = true
             local localinterrupttween = false
 
             DeltaIter(0, 1, 50, function(inc)
-                if t2 or localinterrupttween then 
+                if t2 or localinterrupttween then
                     localinterrupttween = true
                     return
                 end
@@ -254,7 +254,7 @@ local ScrollableObjs = setmetatable({}, {__newindex = function(self, key, value)
             local localinterrupttween = false
 
             DeltaIter(1, 0, 50, function(inc)
-                if t1 or localinterrupttween then 
+                if t1 or localinterrupttween then
                     localinterrupttween = true
                     return
                 end
@@ -314,13 +314,13 @@ end}) do
                             end
 
                             v.__object.Position = Vector2.new(v.__object.Position.X, frame.Position.Y + v.Y + Lerp(ypos, ypos + samount, inc))
-                        
+
                             if v.__object.Position.Y + v.__object.Size.Y > frame.__object.Position.Y + frame.__object.Size.Y - 2 or v.__object.Position.Y < frame.__object.Position.Y + 2 then
                                 v.__object.Visible = false
                             end
                         end
 
-                        scrollbar.DrawFill.Position = key.__object.Position + Vector2.new(key.__object.Size.X - 4 - key.__properties.ScrollBarThickness, 4) + Vector2.new(0, Lerp(0, frame.__object.Size.Y - 6 - scrollbar.DrawFill.Size.Y, ypos / frame.__properties.ScrollSize))
+                        scrollbar.DrawFill.Position = frame.__object.Position + Vector2.new(frame.__object.Size.X - 4 - frame.__properties.ScrollBarThickness, 4) + Vector2.new(0, Lerp(0, frame.__object.Size.Y - 6 - scrollbar.DrawFill.Size.Y, ypos / frame.__properties.ScrollSize))
                     end)
                 end
             end
@@ -608,9 +608,9 @@ function Draw:new(Type, parent)
         IgnoreScrolling = false,
         ScrollSize = 200,
         ScrollAmount = 20,
-        ScrollbarColor = Color3.new(1, 1, 1)
+        ScrollbarColor = Color3.new(1, 1, 1),
         ScrollBarThickness = 4,
-        ScrollbarOutlineColor = Color3.new(.1, .1, .1)
+        ScrollbarOutlineColor = Color3.new(.1, .1, .1),
         -- Universal
         Name = Type,
         Class = Type,
