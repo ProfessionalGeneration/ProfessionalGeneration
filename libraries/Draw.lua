@@ -189,7 +189,14 @@ Draw.__newindex = function(self, key, value)
         end
 
         for _, descendant in self:Children(true) do
-            descendant.__object.Position = descendant.__object.Position + (self.__object.Position - descendant.__object.Position)
+            if v.__properties.Class ~= "Line" then
+                descendant.__object.Position = descendant.__object.Position + (self.__object.Position - descendant.__object.Position)
+                
+                continue
+            end
+
+            descendant.__object.To = descendant.__object.To + (self.__object.Position - descendant.__object.To)
+            descendant.__object.From = descendant.__object.From + (self.__object.Position - descendant.__object.From)
         end
 
         self.__properties[key] = value
