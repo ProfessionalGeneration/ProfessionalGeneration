@@ -7,10 +7,6 @@ local Math = Get:Get"libraries":Get"Math":Load()
 
 local DeltaIter, Lerp = Math.DeltaIter, Math.Lerp
 
-local function Lerp(a, b, c)
-    return a + c * (b - a)
-end
-
 local DraggableObjs = {} do
     local Connection
 
