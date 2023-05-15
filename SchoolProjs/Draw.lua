@@ -1,11 +1,7 @@
 -- commit info goes hard frfr :3
 
-local Services = {
-    Input = cloneref(game:service "UserInputService"),
-    Core = cloneref(game:service "CoreGui"),
-    Run = cloneref(game:service "RunService"),
-    Tween = cloneref(game:service "TweenService")
-}
+local Get, Directory, File = loadfile("Progen/libraries/FileSystem.lua")()
+local Services = Get:Get"libraries":Get"Services"
 
 local Easing = {} do
     Easing.Out = {} do
