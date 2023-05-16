@@ -23,4 +23,12 @@ Math.Lerp = function(a, b, c)
     return a + c * (b - a)
 end
 
+Math.ToV2 = function(vec)
+    return Vector2.new(vec.X, vec.Y)
+end
+
+Math.Point = function(part)
+    return cloneref(cloneref(workspace).CurrentCamera):WorldToViewportPoint(part:getPivot().p)
+end
+
 return Math
