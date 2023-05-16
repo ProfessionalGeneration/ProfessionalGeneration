@@ -29,7 +29,7 @@ function file.Destroy(self)
 end
 
 function file:new(filedir, parent)
-    return setmetatable({__dir = filedir, __parent = parent}, file)
+    return setmetatable({__dir = filedir, __parent = parent, Name = filedir:split"/"[3]}, file)
 end
 
 -- // direcoterieus
@@ -41,8 +41,8 @@ function directory.List(self)
     return self.__files
 end
 
-function directory.Get(self, name: string, suffix: string?)
-    return self.__files[`{name}.{suffix or "lua"}`]
+function directory.Get(self, name: string)
+    return self.__files[`{name}.{name:find"." and "."..string:split"."[2] or "lua"}`]
 end
 
 function directory.File(self, name: string, data: string?)
