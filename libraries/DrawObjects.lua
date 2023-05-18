@@ -34,6 +34,24 @@ objects.Outline = function(frame)
     Left.From = Vector2.new(-1, -1)
     Left.To = Vector2.new(-1, frame.Size.Y + 1)
 
+    function lines:Update()
+        lines.Top1.From = Vector2.new(-1, -1)
+        lines.Top1.To = Vector2.new((frame.Size.X / 2) - 1, -1)
+        lines.Top2.From = Vector2.new((frame.Size.X / 2) + 1, -1)
+        lines.Top2.To = Vector2.new(frame.Size.X + 1, -1)
+
+        lines.Right.From = Vector2.new(frame.Size.X, -1)
+        lines.Right.To = Vector2.new(frame.Size.X, frame.Size.Y + 1)
+
+        lines.Bottom1.From = Vector2.new(-1, frame.Size.Y + 1)
+        lines.Bottom1.To = Vector2.new((frame.Size.X / 2) - 1, frame.Size.Y + 1)
+        lines.Bottom2.From = Vector2.new((frame.Size.X / 2) + 1, frame.Size.Y + 1)
+        lines.Bottom2.To = Vector2.new(frame.Size.X + 1, frame.Size.Y + 1)
+
+        lines.Left.From = Vector2.new(-1, -1)
+        lines.Left.To = Vector2.new(-1, frame.Size.Y + 1)
+    end
+
     return lines
 end
 
