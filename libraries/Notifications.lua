@@ -32,11 +32,12 @@ do
         Position = Vector2.new(10, 40 + (25 * (#Notes - 3))),
         Size = Vector2.new(20, 20),
         Color = Color3.new(.15, .15, .15),
+        Opacity = 0,
     }
     local Outlines = Objects.Outline(Box)
     Show(Box, Outlines, Size)
 
-    
+
 end
 
 return Notes

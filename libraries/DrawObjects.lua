@@ -3,7 +3,7 @@ local Get, Directory, File = loadfile("Progen/libraries/FileSystem.lua")()
 local Draw = Get:"libraries":Get"Draw":Load()
 local Gradient = syn.crypt.base64.decode(Get:"data":Get"Gradient":Read())
 
-objects.Outline = function(frame)
+objects.Outline = function(frame, props)
     local lines = {
         Top1 = Draw:new("Line", frame),
         Top2 = Draw:new("Line", frame),
@@ -13,9 +13,10 @@ objects.Outline = function(frame)
         Left = Draw:new("Line", frame),
     }
 
-    for i,v in lines do
-        v.Thickness = 1
-        v.Color = Color3.new()
+    for prop, val in props do
+        for _, line in lines do
+            v[prop] = val
+        end
     end
 
     Top1.From = Vector2.new(-1, -1)
@@ -34,7 +35,7 @@ objects.Outline = function(frame)
     Left.From = Vector2.new(-1, -1)
     Left.To = Vector2.new(-1, frame.Size.Y + 1)
 
-    function lines:Update()
+    function lines:Update(props)
         lines.Top1.From = Vector2.new(-1, -1)
         lines.Top1.To = Vector2.new((frame.Size.X / 2) - 1, -1)
         lines.Top2.From = Vector2.new((frame.Size.X / 2) + 1, -1)
@@ -50,6 +51,12 @@ objects.Outline = function(frame)
 
         lines.Left.From = Vector2.new(-1, -1)
         lines.Left.To = Vector2.new(-1, frame.Size.Y + 1)
+
+        for prop, val in props or {} do
+            for _, line in lines do
+                v[prop] = val
+            end
+        end
     end
 
     return lines
