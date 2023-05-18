@@ -1,4 +1,5 @@
 local Notes = {}
+-- being so deadass rn snuffles on twitter so fucking CUTE
 
 local function Show(box, outlines, size)
     Math.DeltaIter(0, 1, 60, function(inc)
@@ -33,6 +34,14 @@ do
         Size = Vector2.new(20, 20),
         Color = Color3.new(.15, .15, .15),
         Opacity = 0,
+    }
+    local Text = Objects.Text {
+        Position = Vector2.new(2, 2),
+        Parent = Box,
+        Size = 15,
+        Color = Color3.new(1,1,1),
+        Outlined = true,
+        Text = settings.Text
     }
     local Outlines = Objects.Outline(Box)
     Show(Box, Outlines, Size)
