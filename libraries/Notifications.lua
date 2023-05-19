@@ -27,6 +27,10 @@ local function Hide(box)
     task.spawn(Math.DeltaIter, 0, 1, 20, function(inc)
         inc = Easing.Out.Quad(inc)
 
+        for i,v in box:Children(true) do
+            v.Opacity = 1 - inc
+        end
+
         for i,v in current do
             if v.__object.Position.Y > box.__object.Position.Y then
                 v.Position = Vector2.new(v.Position.X, Math.Lerp(old[v], old[v] - 25, inc))
