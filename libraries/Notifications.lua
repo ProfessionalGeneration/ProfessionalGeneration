@@ -1,8 +1,8 @@
 local Notes = {}
 local current = {}
--- being so deadass rn snuffles on twitter so fucking CUTE
 
 local function Show(box, outlines, size)
+    table.insert(box, current)
     Math.DeltaIter(0, 1, 60, function(inc)
         inc = Easing.Out.Quad(inc)
 
@@ -11,7 +11,7 @@ local function Show(box, outlines, size)
         end
 
         Box.Opacity = inc
-        Box.Size = Vector2.new(Math.Lerp(20, finalsize, inc), 20)
+        Box.Size = Vector2.new(Math.Lerp(20, size, inc), 20)
         Box.Position = Vector2.new(Math.Lerp(10, 50, inc), Box.Position.Y)
         outlines:Update()
     end)
@@ -24,16 +24,16 @@ local function Hide(box)
         old[v] = v.Position.Y
     end
 
-    task.spawn(Math.DeltaIter, 0, 1, 20, function(inc)
+    task.spawn(Math.DeltaIter, 1, 0, 20, function(inc)
         inc = Easing.Out.Quad(inc)
 
         for i,v in box:Children(true) do
-            v.Opacity = 1 - inc
+            v.Opacity = inc
         end
 
         for i,v in current do
             if v.__object.Position.Y > box.__object.Position.Y then
-                v.Position = Vector2.new(v.Position.X, Math.Lerp(old[v], old[v] - 25, inc))
+                v.Position = Vector2.new(v.Position.X, Math.Lerp(old[v] - 25, old[v] inc))
             end
         end
     end)
@@ -52,7 +52,7 @@ function Notes:Note(settings)
 end
 
 do
-    local finalsize = GetTextSize(settings.Text, 16, Drawing.Fonts["Monospace"]).X + 8
+    local finalsize = Math.GetTextSize(settings.Text, 16, Drawing.Fonts["Monospace"]).X + 8
     local Box = Objects.Frame {
         Position = Vector2.new(10, 40 + (25 * (#current - 1))),
         Size = Vector2.new(20, 20),
@@ -70,7 +70,7 @@ do
     }
     local Outlines = Objects.Outline(Box)
     Show(Box, Outlines, Size)
-
+    task.delay(settings.Time, Hide, Box)
 
 end
 
