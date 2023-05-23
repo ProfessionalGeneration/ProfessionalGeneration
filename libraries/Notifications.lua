@@ -17,14 +17,22 @@ local function Show(box, outlines, size)
     end)
 end
 
-local function GetPos(boxes)
+local function GetPosXByOptions(boxes)
     local pos = 0
 
     for i,v in boxes do
-        pos += v.Position.X + v.Size.X
+        pos += v.Size.X
     end
 
     return pos
+end
+
+local function GetNoteY()
+    local pos = 0
+
+    for i,v in current do
+        pos += v.Size.Y
+    end
 end
 
 local function Hide(box)
@@ -63,6 +71,36 @@ end
 
 do
     local finalsize = Math.GetTextSize(settings.Text, 16, Drawing.Fonts["Monospace"]).X + 8
+    local Box = Objects.Frame {
+        Position = Vector2.new(10, 40 + GetNoteY()),
+        Size = Vector2.new(23, 23),
+        Color = Color3.new(.15, .15, .15),
+        Opacity = 0,
+    }
+    local Text = Objects.Label {
+        Position = Vector2.new(2, 2),
+        Parent = Box,
+        Size = 16,
+        Color = Color3.new(1,1,1),
+        Outlined = true,
+        Text = settings.Text,
+        Opacity = 0
+    }
+    local Timer = Objects.Line {
+        From = Vector2.zero,
+        To = Vector2.zero,
+        Parent = Box,
+        Opacity = 0,
+        Thickness = 2,
+        
+    }
+    local Outlines = Objects.Outline(Box)
+
+end
+
+do
+    local finalsize = Math.GetTextSize(settings.Text, 16, Drawing.Fonts["Monospace"]).X + 8
+    local answered = Instance.new "BindableEvent"
     local options = {}
     local Box = Objects.Frame {
         Position = Vector2.new(10, 40 + (25 * (#current - 1))),
@@ -70,7 +108,7 @@ do
         Color = Color3.new(.15, .15, .15),
         Opacity = 0,
     }
-    local Text = Objects.Text {
+    local Text = Objects.Label {
         Position = Vector2.new(2, 2),
         Parent = Box,
         Size = 16,
@@ -80,13 +118,12 @@ do
         Opacity = 0
     }
     local Outlines = Objects.Outline(Box)
-    Show(Box, Outlines, Size)
     
     for i,v in settings.Options do
         local textsize = Math.GetTextSize(v, 14, Drawing.Fonts["Monospace"]).X + 2
             
         local box = Objects.Frame {
-            Position = Vector2.new(GetPos(options) + (#options * 5), 30),
+            Position = Vector2.new(GetPosXByOptions(options) + (#options * 5), 30),
             Parent = Box,
             Size = Vector2.new(textsize),
             Color = Color3.new(.15, .15, .15),
@@ -94,7 +131,7 @@ do
             Active = true
         }
 
-        local text = Objects.Text {
+        local text = Objects.Label {
             Position = Vector2.one,
             Size = 14,
             Parent = box,
@@ -102,10 +139,23 @@ do
             Text = v,
             Opacity = 0,
             Outlined = true,
-            Color = Color3.new(1,1,1)
+            Color = Color3.new(1,1,1),
         }
+
+        box.Button1Down:Connect(function()
+            Answered:Fire(v)
+        end)
     end
 
+    Show(Box, Outlines, Size)
+
+    Answered.Event:Once(function()
+        Hide(Box)
+    end)
+
+    return {
+        ["Answered"] = Answered.Event,
+    }
 end
 
 return Notes

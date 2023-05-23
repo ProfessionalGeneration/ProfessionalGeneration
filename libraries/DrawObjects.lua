@@ -83,6 +83,16 @@ objects.GradientFrame = function(Properties)
     return obj
 end
 
+objects.Line = function(Properties)
+    local obj = Draw:new "Line"
+
+    for i,v in Properties do
+        obj[i] = v
+    end
+
+    return obj
+end
+
 objects.Label = function(Properties)
     local obj = Draw:new "Text"
 
