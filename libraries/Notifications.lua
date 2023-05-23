@@ -17,6 +17,16 @@ local function Show(box, outlines, size)
     end)
 end
 
+local function GetPos(boxes)
+    local pos = 0
+
+    for i,v in boxes do
+        pos += v.Position.X + v.Size.X
+    end
+
+    return pos
+end
+
 local function Hide(box)
     table.remove(current, table.find(current, box))
     local old = {}
@@ -53,6 +63,7 @@ end
 
 do
     local finalsize = Math.GetTextSize(settings.Text, 16, Drawing.Fonts["Monospace"]).X + 8
+    local options = {}
     local Box = Objects.Frame {
         Position = Vector2.new(10, 40 + (25 * (#current - 1))),
         Size = Vector2.new(20, 20),
@@ -62,7 +73,7 @@ do
     local Text = Objects.Text {
         Position = Vector2.new(2, 2),
         Parent = Box,
-        Size = 15,
+        Size = 16,
         Color = Color3.new(1,1,1),
         Outlined = true,
         Text = settings.Text,
@@ -70,7 +81,26 @@ do
     }
     local Outlines = Objects.Outline(Box)
     Show(Box, Outlines, Size)
-    task.delay(settings.Time, Hide, Box)
+    
+    for i,v in settings.Options do
+        local textsize = Math.GetTextSize(v, 14, Drawing.Fonts["Monospace"]).X + 2
+            
+        local box = Objects.Frame {
+            Position = Vector2.new(GetPos(options) + (#options * 5), 30),
+            Parent = Box,
+            Size = Vector2.new(textsize),
+            Color = Color3.new(.15, .15, .15),
+            Opacity = 0,
+            Active = true
+        }
+
+        local text = Objects.Text {
+            Position = Vector2.one,
+            Size = 14,
+            Parent = box,
+            
+        }
+    end
 
 end
 
