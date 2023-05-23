@@ -98,7 +98,11 @@ do
             Position = Vector2.one,
             Size = 14,
             Parent = box,
-            
+            Size = Vector2.new(textsize, 12),
+            Text = v,
+            Opacity = 0,
+            Outlined = true,
+            Color = Color3.new(1,1,1)
         }
     end
 
