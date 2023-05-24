@@ -23,6 +23,12 @@ Math.Lerp = function(a, b, c)
     return a + c * (b - a)
 end
 
+Math.GetTextSize = function(text, size, font)
+    local t = Drawing.new "Text"
+    t.Text, t.Size, t.Font = text, size, font
+    return t.TextBounds
+end
+
 Math.ToV2 = function(vec)
     return Vector2.new(vec.X, vec.Y)
 end
