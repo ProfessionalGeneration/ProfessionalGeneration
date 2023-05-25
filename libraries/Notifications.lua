@@ -91,11 +91,11 @@ do
         To = Vector2.zero,
         Parent = Box,
         Opacity = 0,
-        Thickness = 2,
-        
+        Thickness = 2        
     }
     local Outlines = Objects.Outline(Box)
 
+    
 end
 
 do
