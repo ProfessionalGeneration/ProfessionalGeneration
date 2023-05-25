@@ -105,7 +105,7 @@ do
             timer.To = Vector2.new(Math.Lerp(0, box.Size, i), 23)
         end
 
-        Hide(Box)
+        if not stop then Hide(Box) end
     end
 
     task.spawn(StartTimer)
