@@ -94,8 +94,30 @@ do
         Thickness = 2        
     }
     local Outlines = Objects.Outline(Box)
+    local stop
 
-    
+    local function StartTimer()
+        local i = 0
+
+        while not stop do
+            if i >= sets.Time then break end
+            i += Services.Run.RenderStepped:wait()
+            timer.To = Vector2.new(Math.Lerp(0, box.Size, i), 23)
+        end
+
+        Hide(Box)
+    end
+
+    task.spawn(StartTimer)
+
+    Box.MouseEnter:Connect(function()
+        stop = true
+    end)
+
+    Box.MouseLeave:Connect(function()
+        stop = false
+        StartTimer()
+    end)
 end
 
 do
