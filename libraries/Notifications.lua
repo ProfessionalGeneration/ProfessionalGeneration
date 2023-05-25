@@ -125,7 +125,7 @@ do
     local answered = Instance.new "BindableEvent"
     local options = {}
     local Box = Objects.Frame {
-        Position = Vector2.new(10, 40 + (25 * (#current - 1))),
+        Position = Vector2.new(10, 40 + GetNoteY()),
         Size = Vector2.new(20, 20),
         Color = Color3.new(.15, .15, .15),
         Opacity = 0,
