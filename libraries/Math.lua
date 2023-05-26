@@ -1,32 +1,51 @@
 local Math = {}
+local Get, Directory, File = loadfile("Progen/libraries/FileSystem.lua")()
+local Services = Get:Get"libraries":Get"Services":Load()
+local cam = cloneref(cloneref(workspace).CurrentCamera)
+local text = Drawing.new "Text"
+text.Visible = false
 
 Math.DeltaIter = function(start, _end, mult, callback)
     local up
+    local Break
+
+    local function Spawn()
+        if callback(start) then
+            Break = true
+        end
+    end
 
     if _end > start then
         up = true
     end
 
-    while true do
+    while not Break do
         if up and start > _end then break end
         if not up and _end > start then break end
 
         start += Services.Run.RenderStepped:wait() * (up and mult or -mult)
-        if select(coroutine.resume(coroutine.create(callback), inc), 2) then break end
+        task.spawn(Spawn)
     end
+    if Break then return end
 
-    Services.Run.RenderStepped:wait()
-    callback(_end)
-end
-
-Math.Lerp = function(a, b, c)
-    return a + c * (b - a)
+    Services.Run.RenderStepped:Once(Spawn)
 end
 
 Math.LerpDeltaIter = function(start, _end, speed, callback)
-    return Math.DeltaIter(0, 1, speed, function(inc)
-        callback(Math.Lerp(start, _end, inc))
-    end)
+    local percent = 0
+
+    while percent < 1 do
+        percent += Services.Run.RenderStepped:wait() * speed
+
+        callback(Math.Lerp(start, _end, percent))
+    end
+
+    callback(_end)
+end
+
+Math.GetTextSize = function(text, size, font)
+    text.Text, text.Size, text.Font = text, size, font
+    return text.TextBounds
 end
 
 Math.TextWrap = function(text, textsize, size)
@@ -51,10 +70,8 @@ Math.TextWrap = function(text, textsize, size)
     return table.concat(lines, "\n")
 end
 
-Math.GetTextSize = function(text, size, font)
-    local t = Drawing.new "Text"
-    t.Text, t.Size, t.Font = text, size, font
-    return t.TextBounds
+Math.Lerp = function(a, b, c)
+    return a + c * (b - a)
 end
 
 Math.ToV2 = function(vec)
@@ -62,7 +79,7 @@ Math.ToV2 = function(vec)
 end
 
 Math.Point = function(part)
-    return cloneref(cloneref(workspace).CurrentCamera):WorldToViewportPoint(part:getPivot().p)
+    return cam:WorldToViewportPoint(part:getPivot().p)
 end
 
 return Math
