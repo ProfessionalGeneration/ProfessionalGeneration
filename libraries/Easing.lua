@@ -59,6 +59,10 @@ local Easing = {} do
             x -= 2.625
             return n1 * (x / d1) * x + 0.984375;
         end
+
+        Easing.Out.Linear = function(x)
+            return x
+        end
     end
 
     Easing.In = {} do
@@ -102,6 +106,10 @@ local Easing = {} do
 
         Easing.In.Bounce = function(x)
             return 1 - Easing.Out.Bounce(1 - x)
+        end
+
+        Easing.In.Linear = function(x)
+            return x
         end
     end
 
@@ -157,6 +165,10 @@ local Easing = {} do
         Easing.InOut.Bounce = function(x)
             return x < 0.5 and (1 - Easing.Out.Bounce(1 - 2 * x)) / 2
             or (1 + Easing.Out.Bounce(2 * x - 1)) / 2;
+        end
+
+        Easing.InOut.Linear = function(x)
+            return x
         end
     end
 end
