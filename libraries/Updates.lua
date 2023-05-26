@@ -1,5 +1,5 @@
 local Get = loadfile("Progen/libraries/Get.lua")()
-local Services = Get:Get"libraries":Load "Services"
+local Services = Get:Get"libraries":Get"Services":Load()
 
 local directories = {
     "libraries",
