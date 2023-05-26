@@ -1,12 +1,14 @@
-local Known = {
-    Tween = cloneref(game:service"TweenService"),
-    Core = cloneref(game:service"CoreGui"),
-    Http = cloneref(game:service "HttpService"),
-    Run = cloneref(game:service "RunService"),
-    Players = cloneref(game:service "Players"),
-    Teams = cloneref(game:service "Teams"),
-    Storage = cloneref(game:service "ReplicatedStorage"),
-    First = cloneref(game:service "ReplicatedFirst")
-}
+local Known = setmetatable({}, {__newindex = function(t, k, v)
+    rawset(t, k, cloneref(game:service(v)))
+end})
+
+Known.Tween = "TweenService"
+Known.Core = "CoreGui"
+Known.Http = "HttpService"
+Known.Run = "RunService"
+Known.Players = "Players"
+Known.Teams = "Teams"
+Known.Storage = "ReplicatedStorage"
+Known.First = "ReplicatedFirst"
 
 return Known
