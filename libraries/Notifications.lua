@@ -12,7 +12,7 @@ local function Show(box, outlines, size)
         end
 
         box.Opacity = inc
-        box.Size = Vector2.new(Math.Lerp(20, size, inc), 20)
+        box.Size = Vector2.new(Math.Lerp(20, size, inc), box.Size.Y)
         box.Position = Vector2.new(Math.Lerp(10, 50, inc), box.Position.Y)
         outlines:Update()
     end)
