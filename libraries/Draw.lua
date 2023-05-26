@@ -1,9 +1,5 @@
--- commit info goes hard frfr :3
-
 local Get, Directory, File = loadfile("Progen/libraries/FileSystem.lua")()
-local Services = Get:Get"libraries":Get"Services":Load()
-local Easing = Get:Get"libraries":Get"Easing":Load()
-local Math = Get:Get"libraries":Get"Math":Load()
+local Services, Easing, Math, Tween = Get:Get"libraries":Get"Services":Load(), Get:Get"libraries":Get"Easing":Load(), Get:Get"libraries":Get"Math":Load(), Get:Get"libraries":Get"Tween":Load()
 
 local DeltaIter, Lerp = Math.DeltaIter, Math.Lerp
 
@@ -189,9 +185,9 @@ Draw.__newindex = function(self, key, value)
         end
 
         for _, descendant in self:Children(true) do
-            if v.__properties.Class ~= "Line" then
+            if descendant.__properties.Class ~= "Line" then
                 descendant.__object.Position = descendant.__object.Position + (self.__object.Position - descendant.__object.Position)
-                
+
                 continue
             end
 
@@ -253,36 +249,8 @@ function Draw.Children(self, recursive)
     return children
 end
 
-function Draw.Tween(self, tweeninfo, properties)
-    local startprops = {}
-
-    for i in properties do
-        startprops[i] = self[i]
-    end
-
-    if tweeninfo.DelayTime or tweeninfo.delayTime then -- i get most roblox devs are incompetent but delay(time, func, ...) exists?? 
-        task.wait(tweeninfo.DelayTime or tweeninfo.delayTime)
-    end
-
-    for i = 0, tweeninfo.RepeatCount or tweeninfo.repeatCount or 1 do
-        DeltaIter(0, 1, 1 / (tweeninfo.Time or tweeninfo.time or 1), function(inc)
-            local eased = Services.Tween:GetValue(inc, tweeninfo.EasingStyle or tweeninfo.easingStyle or Enum.EasingStyle.Quad, tweeninfo.EasingDirection or tweeninfo.easingDirection or Enum.EasingDirection.Out)
-
-            for _, v in properties do
-                self[_] = startprops[_]:lerp(v, eased)
-            end
-        end)
-
-        if tweeninfo.Reverses then
-            DeltaIter(1, 0, 1 / (tweeninfo.Time or tweeninfo.time or 1), function(inc)
-                local eased = Services.Tween:GetValue(inc, tweeninfo.EasingStyle or tweeninfo.easingStyle or Enum.EasingStyle.Quad, tweeninfo.EasingDirection or tweeninfo.easingDirection or Enum.EasingDirection.Out)
-
-                for _, v in properties do
-                    self[_] = startprops[_]:lerp(v, eased)
-                end
-            end)
-        end
-    end
+function Draw.Tween(...)
+    Tween:new(...):Play()
 end
 
 function Draw.Destroy(self)
