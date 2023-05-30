@@ -6,7 +6,13 @@ local Network = {}
 Network.__index = Network
 
 function Network:new(port)
-    local port = WebSocketClient.new(`127.0.0.1:{port}`)
+    local socket = WebSocketClient.new(`127.0.0.1:{port}`)
+    local client = Services.Http:JSONEncode {
+        User = Services.Players.LocalPlayer.Name,
+    }
+    socket:Send()
+    
+    return net
 end
 
 function Network.Send(self, data)
