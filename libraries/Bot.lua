@@ -1,7 +1,7 @@
 -- Now this is where we start actually interacting with the game instead of all this misc shit
 -- might have to add support for custom characters later down the line but, thats a problem for future me!
 local Get, Directory, File = loadfile("Progen/libraries/FileSystem.lua")()
-local Network, Services = Get:Get"libraries":Get"Network":Load(), Get:Get"libraries":Get"Services":Load()
+local Network, Services, Config = Get:Get"libraries":Get"Network":Load(), Get:Get"libraries":Get"Services":Load(), shared.Config
 local Bot = {}
 local lp = Services.Playes.LocalPlayer
 
@@ -34,19 +34,19 @@ function Bot.Pathfind(self, position: Vector3, mode: string) -- lmao ill make an
         end
     end
 
-    if mode == "Walkspeed" then
+    if mode == "Walkspeed" then -- i assume this is gonna run a lot fuckin better
         for i,v in points do
+            local oldcf = lp.Character.HumanoidRootPart.CFrame
+
             Math.DeltaIter(0, 1, Config.Player.Walkspeed.Speed, function(inc) 
-                lp.Character.HumanoidRootPart.CFrame:Lerp(CFrame.new(v), inc)
+                lp.Character.HumanoidRootPart.CFrame = oldcf:Lerp(CFrame.new(v), inc)
             end)
         end
     end
-
-    return 
 end
 
 function Bot.SetConfig(self, configpath, setting, newvalue)
-    local path = {} -- i still need to make a config handler... later as well!
+    local path = Config
 
     for i,v in configpath:split"/" do
         path = path[v]
