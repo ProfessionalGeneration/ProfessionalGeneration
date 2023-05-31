@@ -1,29 +1,43 @@
--- ok so basically, websocket. I'll have to make the websocket work wth these so /shrug
+-- ill make websocket later lolo
 local Get, Directory, File = loadfile("Progen/libraries/FileSystem.lua")()
 local Services = Get:Get"libraries":Get"Services":Load()
-
 local Network = {}
-Network.__index = Network
+Network.__index = function(self, key)
+    return Network[key] or self.__connections[key] or self[key]
+end
 
 function Network:new(port)
-    local socket = WebSocketClient.new(`127.0.0.1:{port}`)
-    local client = Services.Http:JSONEncode {
-        User = Services.Players.LocalPlayer.Name,
-    }
-    socket:Send()
-    
-    return net
+    local socket = WebsocketClient.new(`ws://localhost:{port}/`)
+
+    return setmetatable({__socket = socket, __user = Services.Players.LocalPlayer.Name, __connections = {
+        Recieved = socket.DataRecieved
+    }}, Network)
 end
 
 function Network.Send(self, data)
-    self.__socket:Send(Services.Http:JSONEncode(data))
+    self.__socket:Send(Services.Http:JSONEncode(self:GetSendData(data)))
+end
+
+function Network.Connect(self)
+    return self:Invoke(self:GetSendData({}, "connect"))
+end
+
+function Network.GetSendData(self, data, method: string?)
+    return {
+        ID = Services.Http:GenerateGUID(),
+        Client = self.__user,
+        Method = method or "send",
+        Data = data
+    }
 end
 
 function Network.Invoke(self, data)
-    data.ID = Services.Http:GenerateUUIDorsomethingidfk()
-    self.__socket:Send(Services.Http:JSONEncode(data))
-    local recieved
-    repeat recieved = Services.Http:JSONDecode(data.Recieved:Wait()) until recieved and recieved.ID and recieved.ID == data.ID
+    local senddata, recieved = self:GetSendData(data)
+    self.__socket:Send(Services.Http:JSONEncode(senddata), "invoke")
+    repeat
+        recieved = Services.Http:JSONDecode(self.__socket.DataRecieved:Wait())
+    until recieved and recieved.ID and recieved.ID == senddata.ID
+
     return recieved
 end
 
