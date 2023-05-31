@@ -19,7 +19,7 @@ function Network.Send(self, data)
 end
 
 function Network.Connect(self)
-    return self:Invoke(self:GetSendData({}, "connect"))
+    return Services.Http:JSONDecode(self:Invoke(self:GetSendData({}, "connect")))
 end
 
 function Network.GetSendData(self, data, method: string?)
