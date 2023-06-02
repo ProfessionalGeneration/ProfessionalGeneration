@@ -58,6 +58,11 @@ function directory:new(dir)
     local dirt = {__dir = dir, __files = {}}
 
     for i,v in listfiles(dir) do
+        if isfolder(v) then
+            dirt.__files[v:split"/"[3]] = directory:new(v)
+            continue
+        end
+
         dirt.__files[v:split"/"[3]] = file:new(v, dir)
     end
 
