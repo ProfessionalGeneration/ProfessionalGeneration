@@ -16,6 +16,22 @@ function Bot:new(Type)
         until status and status.Return
     end
 
+    BotClient.Recieved:Connect(function(data) -- this is going to look exactly like the networkserver :3
+        local recieved = Services.Http:JSONDecode(data)
+
+        if recieved.Data then
+            if recieved.Data.Action == "Join" then
+                Services.Teleport:TeleportToPlaceInstance(game.PlaceId, data.JobId)
+            end
+
+            if recieved.Data.Action == "Chat" and data.JobId == game.JobId then            
+                ESL.Chat(recieved.Data.Message)
+            end
+
+            if recieved.Data.Action == "Config"
+        end
+    end)
+
     return setmetatable({__client = BotClient, __type = Type, __position = table.find(BotClient:GetConnected(), lp.Name)}, Bot)
 end
 
@@ -62,16 +78,6 @@ function Bot.Guard(self, cf: Vector3, size: Vector3, Callback)
     }
 end
 
-function Bot.SetConfig(self, configpath, setting, newvalue)
-    local path = Config
-
-    for i,v in configpath:split"/" do
-        path = path[v]
-    end
-
-    path[setting] = newvalue
-end
-
 return Bot
 
 --[[
@@ -96,6 +102,6 @@ for i,v in lyrics do
         Message = v
     }
 
-    task.wait(2)
+    task.wait(1)
 end
 ]]
