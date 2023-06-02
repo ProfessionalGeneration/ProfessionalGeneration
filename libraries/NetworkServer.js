@@ -3,6 +3,7 @@
 import { WebSocketServer } from 'ws';
 var BotClients = [];
 const BotServer = new WebSocketServer({ port: 10101 });
+const AccountServer = new WebSocketServer({ port: 20202 });
 
 BotServer.on('connection', (ws) => {
     ws.on('message', (data) => {
@@ -12,16 +13,14 @@ BotServer.on('connection', (ws) => {
             if (recieved.Data.Action === "GetConnected") {
                 var clients = [];
 
-                for (const client of BotClients) {
-                    clients.push(BotClients.indexOf(client));
-                };
-
-                ws.send(JSON.stringify([ID = recieved.ID, Return = clients]));
-
-                return;
-            };
-
-            if (recieved.Data.Action === "Connect") {
+                for (const client of BotClients) {switch (DA) {
+                    case value:
+                        
+                        break;
+                
+                    default:
+                        break;
+                }
                 BotClients[recieved.Client] = ws;
                 ws.send(JSON.stringify([ID = recieved.ID, Return = true]));
 
@@ -34,5 +33,11 @@ BotServer.on('connection', (ws) => {
                 client.send(data);
             };
         };
+    });
+});
+
+AccountServer.on('connection', (ws) => {
+    ws.on('message', (data) => {
+
     });
 });
