@@ -4,23 +4,28 @@ import { WebSocketServer } from 'ws';
 var BotClients = [];
 const BotServer = new WebSocketServer({ port: 10101 });
 
-BotServer.on('connection', function connection(ws) {
-    BotServer.on('message', function message(data) {
+BotServer.on('connection', (ws) => {
+    ws.on('message', (data) => {
         const recieved = JSON.parse(data)
 
-        if (recieved.Method === "connect") {
-            BotClients[recieved.Client] = ws;
-        };
-
-        if (recieved.Method === "invoke") { // this is going to become a giant if chain -- 6/1/23
-            if (recieved.Action === "GetConnected") {
+        if (recieved.Method === "invoke" && recieved.Data) { // this is going to become a giant if chain -- 6/1/23
+            if (recieved.Data.Action === "GetConnected") {
                 var clients = [];
 
                 for (const client of BotClients) {
                     clients.push(BotClients.indexOf(client));
                 };
 
-                ws.send(JSON.stringify(clients));
+                ws.send(JSON.stringify([ID = recieved.ID, Return = clients]));
+
+                return;
+            };
+
+            if (recieved.Data.Action === "Connect") {
+                BotClients[recieved.Client] = ws;
+                ws.send(JSON.stringify([ID = recieved.ID, Return = true]));
+
+                return;
             };
         };
 
@@ -30,6 +35,4 @@ BotServer.on('connection', function connection(ws) {
             };
         };
     });
-
-    BotServer.send('something');
 });
