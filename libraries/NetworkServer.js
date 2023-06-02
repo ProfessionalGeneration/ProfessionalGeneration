@@ -13,13 +13,8 @@ BotServer.on('connection', (ws) => {
             if (recieved.Data.Action === "GetConnected") {
                 var clients = [];
 
-                for (const client of BotClients) {switch (DA) {
-                    case value:
-                        
-                        break;
-                
-                    default:
-                        break;
+                for (const client of BotClients) {
+                    clients.push(BotClients.indexOf(client));
                 }
                 BotClients[recieved.Client] = ws;
                 ws.send(JSON.stringify([ID = recieved.ID, Return = true]));
