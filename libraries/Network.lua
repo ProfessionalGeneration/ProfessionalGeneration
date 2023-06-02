@@ -32,7 +32,7 @@ function Network.Connect(self)
 end
 
 function Network.GetConnected(self)
-    return self:Invoke{["Action"] = "GetConnected"}.Connected
+    return self:Invoke {["Action"] = "GetConnected"}.Connected
 end
 
 function Network.GetSendData(self, data, method: string?)

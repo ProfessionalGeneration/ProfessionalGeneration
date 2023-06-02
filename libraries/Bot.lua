@@ -3,6 +3,9 @@
 local Get, Directory, File = loadfile("Progen/libraries/FileSystem.lua")()
 local Network, Services, Math, ESL, Config = Get:Get"libraries":Get"Network":Load(), Get:Get"libraries":Get"Services":Load(), Get:Get"libraries":Get"Math":Load(), Get:Get"games":Get"ElectricState":Get"Functions", shared.Config
 local Bot = {}
+Bot.__index = function(self, key)
+    return Bot[key] or self.__client[key]
+end
 local lp = Services.Playes.LocalPlayer
 
 function Bot:new(Type)
@@ -10,7 +13,7 @@ function Bot:new(Type)
     do
         local status
         repeat status = BotClient:Connect()
-        until status and status.Data and status.Data.Message == "success"
+        until status and status.Return
     end
 
     return setmetatable({__client = BotClient, __type = Type, __position = table.find(BotClient:GetConnected(), lp.Name)}, Bot)
@@ -70,3 +73,29 @@ function Bot.SetConfig(self, configpath, setting, newvalue)
 end
 
 return Bot
+
+--[[
+LMAO i thought of something hilarious during my math class, and it brings back old piano v1.4 days...
+Theyve got allen wrenches...
+
+local lyrics = {
+    
+}
+local BotIncrement = 0
+local Bots = Bot.__client:GetConnected()
+
+for i,v in lyrics do
+    BotIncrement += 1
+    if BotIncrement == 1 then
+        ESL.Chat(v)
+        continue
+    end
+
+    Bot:Send {
+        Action = "Chat",
+        Message = v
+    }
+
+    task.wait(2)
+end
+]]
