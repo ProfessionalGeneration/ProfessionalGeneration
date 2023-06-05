@@ -11,5 +11,6 @@ Known.Teams = "Teams"
 Known.Storage = "ReplicatedStorage"
 Known.First = "ReplicatedFirst"
 Known.Teleport = "TeleportService"
+Known.Stats = "Stats"
 
 return Known
