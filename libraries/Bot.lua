@@ -43,6 +43,18 @@ function Bot:new(Type)
             if recieved.Data.Action == "Build" then
                 ESL.Building.Place(recieved.Data.PropName, JsonToCFrame(recieved.Data.CFrame), recieved.Data.Color, recieved.Data.Material, recieved.Data.Size)
             end
+
+            if recieved.Data.Action == "Edit" then
+                local prop = (function() 
+                    for i,v in workspace.Buildings[lp.Name]:children() do
+                        if v.PrimaryPart.CFrame == JsonToCFrame(recieved.Data.PartCFrame) then
+                            return v
+                        end
+                    end
+                end)()
+
+                ESL.Building.Edit(prop, JsonToCFrame(recieved.Data.CFrame), recieved.Data.Color, recieved.Data.Material, recieved.Data.Size)
+            end
         end
     end)
 
