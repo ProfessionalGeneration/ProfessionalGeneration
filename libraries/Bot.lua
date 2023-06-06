@@ -8,6 +8,10 @@ Bot.__index = function(self, key)
 end
 local lp = Services.Playes.LocalPlayer
 
+function JsonToCFrame(pos) -- thank you paa!
+    return CFrame.new(unpack(pos:split(', ')))
+end
+
 function Bot:new(Type)
     local BotClient = Network:new "10101"
     do
@@ -16,29 +20,37 @@ function Bot:new(Type)
         until status and status.Return
     end
 
-    BotClient.Recieved:Connect(function(data) -- this is going to look exactly like the networkserver :3
+    BotClient.Recieved:Connect(function(data) -- this is going to look exactly like the networkserver :3 (no its not i just havent updated with current verion)
         local recieved = Services.Http:JSONDecode(data)
 
         if recieved.Data then
-            if recieved.Data.Action == "Join" then
+            if recieved.Data.Action == "Join" and game.JobId ~= data.JobId then
                 Services.Teleport:TeleportToPlaceInstance(game.PlaceId, data.JobId)
             end
 
             if recieved.Data.Action == "Chat" and data.JobId == game.JobId then            
-                ESL.Chat(recieved.Data.Message)
+                ESL.Util.Chat(recieved.Data.Message)
             end
 
-            if recieved.Data.Action == "Config"
+            if recieved.Data.Action == "Shoot" then
+                ESL.Combat.Shoot(Services.Players[recieved.Data.Player])
+            end
+
+            if recieved.Data.Action == "Node" then
+                ESL.Building.Place("Node", JsonToCFrame(recieved.Data.CFrame))
+            end
+
+            if recieved.Data.Action == "Build" then
+                ESL.Building.Place(recieved.Data.PropName, JsonToCFrame(recieved.Data.CFrame), recieved.Data.Color, recieved.Data.Material, recieved.Data.Size)
+            end
         end
     end)
 
     return setmetatable({__client = BotClient, __type = Type, __position = table.find(BotClient:GetConnected(), lp.Name)}, Bot)
 end
 
-function Bot.Teleport(self, position: Vector3 | CFrame)
-    if lp.Character and lp.Character:findFirstChild "HumanoidRootPart" then
-        lp.Character.HumanoidRootPart.CFrame = typeof(position) == "Vector3" and CFrame.new(position, lp.Character.HumanoidRootPart.CFrame.LookAt) or position
-    end
+function Bot.Move(self, position: Vector3 | CFrame)
+    ESL.Movement.Teleport(type(position) == "Vector3" and CFrame.new(position, lp.Character:getPivot().lookVector) or position)
 end
 
 function Bot.Guard(self, cf: Vector3, size: Vector3, Callback)
@@ -93,7 +105,7 @@ local Bots = Bot.__client:GetConnected()
 for i,v in lyrics do
     BotIncrement += 1
     if BotIncrement == 1 then
-        ESL.Chat(v)
+        ESL.Util .Chat(v)
         continue
     end
 
