@@ -23,6 +23,10 @@ BotServer.on('connection', (ws) => {
             };
         };
 
+        if (recieved.Method === "send" && recieved.Reciever) {
+            clients[recieved.Reciever].send(data)
+        }
+
         if (recieved.Method === "send") {
             for (const client in BotClients) {
                 client.send(data);

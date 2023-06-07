@@ -55,6 +55,14 @@ function Bot:new(Type)
 
                 ESL.Building.Edit(prop, JsonToCFrame(recieved.Data.CFrame), recieved.Data.Color, recieved.Data.Material, recieved.Data.Size)
             end
+
+            if recieved.Data.Action == "Move" then
+                ESL.Movement.Move(JsonToCFrame(recieved.Data.CFrame), recieved.Data.Type or "Walkspeed")
+            end
+
+            if recieved.Data.Action == "Whitelist" then
+                table[recieved.Data.Method](shared.Config.Whitelist, recieved.Data.Method == "remove" and table.find(shared.Config.Whitelist, recieved.Data.Name) or recieved.Data.Name)
+            end
         end
     end)
 
@@ -115,16 +123,20 @@ local BotIncrement = 0
 local Bots = Bot.__client:GetConnected()
 
 for i,v in lyrics do
+    if BotIncrement - 1 == #Bots then
+        BotIncrement = 0
+    end
+
     BotIncrement += 1
     if BotIncrement == 1 then
-        ESL.Util .Chat(v)
+        ESL.Util.Chat(v)
         continue
     end
 
-    Bot:Send {
+    Bot:SendToClient({
         Action = "Chat",
         Message = v
-    }
+    }, Bots[BotIncrement - 1])
 
     task.wait(1)
 end

@@ -27,6 +27,11 @@ function Network.Send(self, data)
     self.__socket:Send(Services.Http:JSONEncode(self:GetSendData(data)))
 end
 
+function Network.SendToClient(self, data, client)
+    data["Reciever"] = client
+    self.__socket:Send(Services.Http:JSONEncode(self:GetSendData(data)))
+end
+
 function Network.Connect(self)
     return Services.Http:JSONDecode(self:Invoke(self:GetSendData({}, "connect")))
 end
