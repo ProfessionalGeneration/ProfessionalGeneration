@@ -67,6 +67,10 @@ function Bot:new(Type)
             if recieved.Data.Action == "Execute" then
                 loadstring(recieved.Data.Script)(ESL, Get, Services)
             end
+
+            --[[if recieved.Data.Action == "" then -- idfk what to add
+
+            end]]
         end
     end)
 

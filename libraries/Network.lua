@@ -29,7 +29,7 @@ end
 
 function Network.SendToClient(self, data, client)
     data["Reciever"] = client
-    self.__socket:Send(Services.Http:JSONEncode(self:GetSendData(data)))
+    self.__socket:Send(Services.Http:JSONEncode(self:GetSendData(data, "sendclient")))
 end
 
 function Network.Connect(self)

@@ -4,33 +4,39 @@ import { WebSocketServer } from 'ws';
 var BotClients = [];
 const BotServer = new WebSocketServer({ port: 10101 });
 const AccountServer = new WebSocketServer({ port: 20202 });
+const BotMethods = [
+    invoke = (ws, data) => {
+        data = JSON.parse(data);
 
-BotServer.on('connection', (ws) => {
-    ws.on('message', (data) => {
-        const recieved = JSON.parse(data)
-
-        if (recieved.Method === "invoke" && recieved.Data) { // this is going to become a giant if chain -- 6/1/23
-            if (recieved.Data.Action === "GetConnected") {
+        if (data.Method === "invoke" && data.Data) {
+            if (data.Data.Action === "GetConnected") {
                 var clients = [];
 
                 for (const client of BotClients) {
                     clients.push(BotClients.indexOf(client));
                 }
-                BotClients[recieved.Client] = ws;
-                ws.send(JSON.stringify([ID = recieved.ID, Return = true]));
+                BotClients[data.Client] = ws;
 
-                return;
+                return JSON.stringify([ID = recieved.ID, Return = true]);
             };
         };
+    },
+    send = (data) => {
+        for (const client in BotClients) {
+            client.send(data);
+        };
+    },
+    sendclient = (data) => {
+        clients[JSON.parse(data).Reciever].send(data);
+    }
+];
 
-        if (recieved.Method === "send" && recieved.Reciever) {
-            clients[recieved.Reciever].send(data)
-        }
+BotServer.on('connection', (ws) => {
+    ws.on('message', (data) => {
+        const sendback = BotMethods[recieved.Method](data);
 
-        if (recieved.Method === "send") {
-            for (const client in BotClients) {
-                client.send(data);
-            };
+        if (sendback != null) {
+            ws.send(sendback);
         };
     });
 });
