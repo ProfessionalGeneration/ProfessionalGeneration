@@ -68,11 +68,17 @@ function Bot:new(Type)
                 loadstring(recieved.Data.Script)(ESL, Get, Services)
             end
 
-            --[[
-            if recieved.Data.Action == "" then -- idfk what to add
+            if recieved.Data.Action == "Gun" then -- idfk what to add
+                for i,v in lp.PlayerData.Inventory.Value:split"," do
+                    if v == recieved.Data.Preferred then
+                        return ESL.Player.Equip(Preferred)
+                    end
 
+                    if ESL.Combat.IsGunFromName(v) then
+                        ESL.Player.Equip(v)
+                    end
+                end
             end
-            ]]
         end
     end)
 
