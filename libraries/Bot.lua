@@ -68,9 +68,11 @@ function Bot:new(Type)
                 loadstring(recieved.Data.Script)(ESL, Get, Services)
             end
 
-            --[[if recieved.Data.Action == "" then -- idfk what to add
+            --[[
+            if recieved.Data.Action == "" then -- idfk what to add
 
-            end]]
+            end
+            ]]
         end
     end)
 
