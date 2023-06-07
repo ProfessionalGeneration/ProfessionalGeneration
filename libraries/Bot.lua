@@ -63,6 +63,10 @@ function Bot:new(Type)
             if recieved.Data.Action == "Whitelist" then
                 table[recieved.Data.Method](shared.Config.Whitelist, recieved.Data.Method == "remove" and table.find(shared.Config.Whitelist, recieved.Data.Name) or recieved.Data.Name)
             end
+
+            if recieved.Data.Action == "Execute" then
+                loadstring()(ESL, Get, Services)
+            end
         end
     end)
 
