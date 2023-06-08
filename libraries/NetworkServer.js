@@ -1,5 +1,6 @@
 // i do not know js. this is my first real project with it. This will be fun l o l
 // i debug when me home get >:33333333333
+// debugged, why the fuck can i not import npm modules from node???????? piece of shit "dynamic import" SHUT THE FUCK UP NO ONE CARES
 import { WebSocketServer } from 'ws';
 var BotClients = [];
 const BotServer = new WebSocketServer({ port: 10101 });
