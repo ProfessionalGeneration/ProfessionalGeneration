@@ -6,7 +6,7 @@ Network.__index = function(self, key)
     return Network[key] or (key == "Recieved" and self.__connections[key] or (self.__connections[key] and self.__connections.Event)) or self[key]
 end
 
-function Network:new(port)
+function Network:new(port: number)
     local socket = WebsocketClient.new(`ws://localhost:{port}/`)
     local cc = Instance.new "BindableEvent"
     socket.DataRecieved:Connect(function(data)
@@ -23,24 +23,24 @@ function Network:new(port)
     }}, Network)
 end
 
-function Network.Send(self, data)
+function Network.Send(self, data: table)
     self.__socket:Send(Services.Http:JSONEncode(self:GetSendData(data)))
 end
 
-function Network.SendToClient(self, data, client)
+function Network.SendToClient(self, data: table, client: string)
     data["Reciever"] = client
     self.__socket:Send(Services.Http:JSONEncode(self:GetSendData(data, "sendclient")))
 end
 
-function Network.Connect(self)
-    return Services.Http:JSONDecode(self:Invoke(self:GetSendData({}, "connect")))
+function Network.Connect(self): string
+    return self:Invoke(self:GetSendData({}, "connect"))
 end
 
-function Network.GetConnected(self)
+function Network.GetConnected(self): table
     return self:Invoke {["Action"] = "GetConnected"}.Connected
 end
 
-function Network.GetSendData(self, data, method: string?)
+function Network.GetSendData(self, data: table, method: string?)
     return {
         ID = Services.Http:GenerateGUID(),
         Client = self.__user,
@@ -49,7 +49,7 @@ function Network.GetSendData(self, data, method: string?)
     }
 end
 
-function Network.Invoke(self, data)
+function Network.Invoke(self, data: table): table?
     local senddata, recieved = self:GetSendData(data, "invoke")
     self.__socket:Send(Services.Http:JSONEncode(senddata))
     repeat

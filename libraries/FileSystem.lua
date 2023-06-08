@@ -54,7 +54,7 @@ function directory.Delete(self)
     return delfolder(self.__dir)
 end
 
-function directory:new(dir)
+function directory:new(dir: string)
     local dirt = {__dir = dir, __files = {}}
 
     for i,v in listfiles(dir) do
