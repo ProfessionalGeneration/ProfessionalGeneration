@@ -93,6 +93,16 @@ objects.Line = function(Properties)
     return obj
 end
 
+objects.Circle = function(Properties)
+    local obj = Draw:new "Circle"
+
+    for i,v in Properties do
+        obj[i] = v
+    end
+
+    return obj
+end
+
 objects.Label = function(Properties)
     local obj = Draw:new "Text"
 
