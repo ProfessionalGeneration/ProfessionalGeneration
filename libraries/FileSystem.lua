@@ -1,3 +1,5 @@
+local loaded = {}
+
 local file = {}
 file.__index = file
 function file.Read(self)
@@ -8,11 +10,15 @@ function file.Write(self, data: string)
     return writefileasync(self.__dir, data)
 end
 
-function file.Load(self, ...)
-    return loadfileasync(self.__dir)(...)
+function file.Load(self, ...) -- i dont need 1838123812 scripts running (lol im gonna have to replace the filesystem in each library :cryingsunglasses:)
+    if not loaded[self] then
+        loaded[self] = loadfileasync(self.__dir)(...)
+    end
+
+    return loaded[self]
 end
 
-function file.Function(self)
+function file.Function(self) -- dont know whenever the fuck im using this
     return loadfileasync(self.__dir)
 end
 
