@@ -8,19 +8,21 @@ local Services, Draw, DrawObjects, Easing, Math, Tween = Libraries:Get"Services"
 local Interactables = {}
 Interactables.__index = Interactables
 
-function Interactables:Button(frame, settings, callback) -- i think im gonna go a different route i dont like this one
-    local Text = DrawObjects.Label()
-
-    Text.Active = true
-    Text.Text = settings.Text
-    Text.Color = settings.Color or Color3.new(1, 1, 1)
-    Text.Outlined = true
-    Text.Size = settings.Size or frame.Size.Y - 2
-    Text.Visible = true
-    Text.Parent = frame
-    Text.Name = "ButtonText"
+function Interactables:Button(Frame, settings, callback) -- i think im gonna go a different route i dont like this one
+    local Text = DrawObjects.Label {
+        Text = settings.Text,
+        Active = true,
+        Color = settings.Locked and (settings.Color:Lerp(Color3.new(), .75) or Color3.new(1,1,1):Lerp(Color3.new(), .75)) or (settings.Color or Color3.new(1, 1, 1)),
+        Outlined = true,
+        Size = settings.Size or frame.Size.Y - 2,
+        Visible = true,
+        Position = settings.Position or Vector2.zero,
+        Parent = Frame,
+        Name = "ButtonText"
+    }
 
     local con = Frame.Mouse1Down:Connect(function()
+        if settings.Locked then return end
         local oc = Frame.Color
 
         Frame.Color = oc:Lerp(Color3.new(), .75)
@@ -29,7 +31,52 @@ function Interactables:Button(frame, settings, callback) -- i think im gonna go 
         Frame.Color = oc
     end)
 
-    return setmetatable({__frame = frame, __settings = settings}, Interactables)
+    return setmetatable({__frame = frame, __settings = settings, __type = "Button"}, Interactables)
+end
+
+function Interactables:Toggle(Frame, settings, callback)
+    local Text = DrawObjects.Label {
+        Text = settings.Text,
+        Active = true,
+        Color = settings.Locked and (settings.Color:Lerp(Color3.new(), .75) or Color3.new(1,1,1):Lerp(Color3.new(), .75)) or (settings.Color or Color3.new(1, 1, 1)),
+        Outlined = true,
+        Size = settings.Size or frame.Size.Y - 2,
+        Visible = true,
+        Position = settings.Position or Vector2.zero,
+        Parent = Frame,
+        Name = "ButtonText"
+    }
+    local Toggle = DrawObjects.GradientFrame {
+        Active = true,
+        Size = Vector2.new(Frame.Size.Y - 4, Frame.Size.Y - 4),
+        Visible = true,
+        Color = settings.Toggled and Color3.new(0, .8, 0) or Color3.new(.8, 0, 0),
+        Parent = Frame,
+        Name = "ToggleBox"
+    }
+    DrawObjects.Outline(Toggle)
+    local function Toggle()
+        if settings.Locked then return end
+    
+        Toggle:Tween(, {}, {Direction = "InOut", Style = "Quint"})
+    end
+
+    Frame.Mouse1Down:Connect(Toggle)
+    Toggle.Mouse1Down:Connect(Toggle)
+
+    return setmetatable({__frame = frame, __settings = settings, __type = "Button"}, Interactables)
+end
+
+function Interactables.Lock(self, locked)
+    local text = (table.find({"Button", "Toggle"}, self.__type) and self.__frame.ButtonText
+
+    locked = locked == nil and not self.__settings.Locked or locked
+    self.__settings.Locked = locked
+    text.Color = locked and (settings.Color:Lerp(Color3.new(), .75) or Color3.new(1,1,1):Lerp(Color3.new(), .75)) or (settings.Color or Color3.new(1, 1, 1))
+end
+
+function Interactables.Edit(self, settings)
+    --self.
 end
 
 return UIs
