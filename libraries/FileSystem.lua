@@ -80,14 +80,6 @@ end
 local get = {} do
     local directories = {}
 
-    if not isfolder "Progen" then
-        makefolder "Progen"
-        
-        for i,v in {"libraries", "data", "games"} do
-            makefolder(`Progen/{v}`)
-        end
-    end
-
     function get:List()
         return directories
     end
