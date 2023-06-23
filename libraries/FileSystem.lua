@@ -48,7 +48,7 @@ function directory.List(self)
 end
 
 function directory.Get(self, name: string)
-    return self.__files[`{name}.{name:find"." and "."..string:split"."[2] or "lua"}`]
+    return self.__files[`{name}.{name:find"." and "."..name:split"."[2] or "lua"}`]
 end
 
 function directory.File(self, name: string, data: string?)
