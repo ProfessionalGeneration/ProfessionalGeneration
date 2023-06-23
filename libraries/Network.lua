@@ -1,9 +1,8 @@
--- ill make websocket later lolo
-local Get, Directory, File = loadfile("Progen/libraries/FileSystem.lua")()
+local Get, Directory, File = ...
 local Services = Get:Get"libraries":Get"Services":Load()
 local Network = {}
 Network.__index = function(self, key)
-    return Network[key] or (key == "Recieved" and self.__connections[key] or (self.__connections[key] and self.__connections.Event)) or self[key]
+    return Network[key] or self.__connections[key] or self[key]
 end
 
 function Network:new(port: number)
@@ -12,51 +11,53 @@ function Network:new(port: number)
     socket.DataRecieved:Connect(function(data)
         local processed = Services.Http:JSONDecode(data)
 
-        if data.Data and data.Data.Action == "ClientConnected" then
-            cc:Fire(data.Data.Client)
+        if processed.Data and processed.Data.Action == "ClientConnected" then
+            cc:Fire(processed.Data.Client)
         end
     end)
 
     return setmetatable({__socket = socket, __user = Services.Players.LocalPlayer.Name, __connections = {
         Recieved = socket.DataRecieved,
-        ClientConnected = cc
+        ClientConnected = cc.Event
     }}, Network)
 end
 
-function Network.Send(self, data: table)
-    self.__socket:Send(Services.Http:JSONEncode(self:GetSendData(data)))
+function Network.Send(self, data)
+    self.__socket:Send(self:GetSendData(data))
 end
 
 function Network.SendToClient(self, data: table, client: string)
     data["Reciever"] = client
-    self.__socket:Send(Services.Http:JSONEncode(self:GetSendData(data, "sendclient")))
+    self.__socket:Send(self:GetSendData(data, "sendclient"))
 end
 
-function Network.Connect(self): string
-    return self:Invoke(self:GetSendData({}, "connect"))
+function Network.GetConnected(self)
+    return self:Invoke {["Action"] = "GetConnected"}
 end
 
-function Network.GetConnected(self): table
-    return self:Invoke {["Action"] = "GetConnected"}.Connected
+function Network.Connect(self)
+    return self:Invoke {["Action"] = "Connect"}
 end
 
 function Network.GetSendData(self, data: table, method: string?)
-    return {
+    return Services.Http:JSONEncode {
         ID = Services.Http:GenerateGUID(),
         Client = self.__user,
         Method = method or "send",
-        Data = Services.Http:JSONEncode(data)
+        JobId = game.JobId,
+        Data = data
     }
 end
 
-function Network.Invoke(self, data: table): table?
+function Network.Invoke(self, data)
     local senddata, recieved = self:GetSendData(data, "invoke")
-    self.__socket:Send(Services.Http:JSONEncode(senddata))
+    local id = Services.Http:JSONDecode(senddata).ID
+    self.__socket:Send(senddata)
     repeat
         recieved = Services.Http:JSONDecode(self.__socket.DataRecieved:Wait())
-    until recieved and recieved.ID and recieved.ID == senddata.ID
+    until recieved and recieved.ID and recieved.ID == id
 
-    return recieved
+    return recieved.Return
 end
 
 return Network
