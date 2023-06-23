@@ -52,7 +52,7 @@ function directory.Get(self, name: string)
 end
 
 function directory.File(self, name: string, data: string?)
-    writefileasync(self, `{self.__dir}/{name}`, data or "")
+    writefileasync(`{self.__dir}/{name}`, data or "")
     self.__files[name] = file:new(`{self.__dir}/{name}`, self.__dir)
 end
 
