@@ -31,6 +31,14 @@ Math.DeltaIter = function(start, _end, mult, callback)
     Services.Run.RenderStepped:Once(Spawn)
 end
 
+Math.Curve = function(start, _end, points, _i)
+    for i = 1, #points do
+        start = start:lerp(points[i], _i)
+    end
+
+    return start:lerp(_end, _i)
+end
+
 Math.LerpDeltaIter = function(start, _end, speed, callback)
     local percent = 0
 
