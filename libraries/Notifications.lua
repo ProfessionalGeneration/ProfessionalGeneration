@@ -1,4 +1,4 @@
-local Get, File, Directory = loadfile("Progen/libraries/FileSystem.lua")()
+local Get, File, Directory = ...
 local Objects, Math, Easing, Services = Get:Get"libraries":Get"DrawObjects":Load(), Get:Get"libraries":Get"Math":Load(), Get:Get"libraries":Get"Easing":Load(), Get:Get"libraries":Get"Services":Load()
 local Notes, current = {}, {}
 
