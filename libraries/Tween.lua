@@ -1,4 +1,4 @@
-local Get, File, Directory = loadfile("Progen/libraries/FileSystem.lua")()
+local Get, File, Directory = ...
 local Math, Easing = Get:Get"Math":Load(), Get:Get"Easing":Load()
 local Tween = {}
 Tween.__index = function(self, key)
