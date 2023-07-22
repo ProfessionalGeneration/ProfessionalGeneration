@@ -12,5 +12,6 @@ Known.Storage = "ReplicatedStorage"
 Known.First = "ReplicatedFirst"
 Known.Teleport = "TeleportService"
 Known.Stats = "Stats"
+Known.Input = "UserInputService"
 
 return Known
