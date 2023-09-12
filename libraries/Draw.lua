@@ -1,5 +1,5 @@
 local Get, Directory, File = loadfile("Progen/libraries/FileSystem.lua")()
-local Services, Easing, Math, Tween = Get:Get"libraries":Get"Services":Load(), Get:Get"libraries":Get"Easing":Load(), Get:Get"libraries":Get"Math":Load(), Get:Get"libraries":Get"Tween":Load()
+local Services, Easing, Math, Tween = Get:Get"libraries":Get"Services":Load(), Get:Get"libraries":Get"Easing":Load(), Get:Get"libraries":Get"Math":Load(Get), Get:Get"libraries":Get"Tween":Load(Get)
 
 local DeltaIter, Lerp = Math.DeltaIter, Math.Lerp
 
